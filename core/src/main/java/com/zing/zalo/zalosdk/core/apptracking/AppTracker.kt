@@ -5,6 +5,8 @@ import android.os.Build
 import android.text.TextUtils
 import com.zing.zalo.devicetrackingsdk.DeviceTracking
 import com.zing.zalo.devicetrackingsdk.DeviceTrackingListener
+import com.zing.zalo.devicetrackingsdk.SdkTracking
+import com.zing.zalo.devicetrackingsdk.SdkTrackingListener
 import com.zing.zalo.zalosdk.core.Constant
 import com.zing.zalo.zalosdk.core.helper.*
 import com.zing.zalo.zalosdk.core.http.HttpClient
@@ -29,6 +31,7 @@ class AppTracker(private val context: Context) : IAppTracker {
 
     internal var appTrackerStorage = AppTrackerStorage(context)
     internal var storage = Storage(context)
+    internal var sdkTracking = SdkTracking(context)
 
     private var submitRetry = 0
     private var listener: AppTrackerListener? = null
@@ -65,10 +68,6 @@ class AppTracker(private val context: Context) : IAppTracker {
         try {
             val request = HttpGetRequest(Constant.api.API_TRACKING_URL)
             request.addQueryStringParameter("pl", "android")
-
-
-//            Todo: [important] remove comment
-//            request.addQueryStringParameter("appId", "1577725557845407485")
             request.addQueryStringParameter("appId", AppInfo.getAppId(context))
             request.addQueryStringParameter(
                 "zdId",
@@ -76,7 +75,7 @@ class AppTracker(private val context: Context) : IAppTracker {
             )
             request.addQueryStringParameter(
                 "sdkId",
-                DeviceTracking.getSDKId() ?: ""
+                sdkTracking.getSDKId() ?: ""
             )
 
             val response = httpClient.send(request)
@@ -104,12 +103,6 @@ class AppTracker(private val context: Context) : IAppTracker {
 
     fun scanInstalledApps(): Boolean {
         try {
-            //Todo: [important] check logic below code
-//            if (packageNames.size == 0) {
-//                Log.d("scanInstalledApps", "Downloaded packages is empty")
-//                return false
-//            }
-
             for (each in packageNames) {
                 if (Utils.isPackageExisted(context, each)) installedPackagedNames.add(each)
             }
@@ -135,8 +128,8 @@ class AppTracker(private val context: Context) : IAppTracker {
             }
 
             val deviceId = DeviceTracking.getDeviceId() ?: ""
-            val sdkId = DeviceTracking.getSDKId() ?: ""
-            val privateKey = DeviceTracking.getPrivateKey() ?: ""
+            val sdkId = sdkTracking.getSDKId() ?: ""
+            val privateKey = sdkTracking.getPrivateKey() ?: ""
 
             if (TextUtils.isEmpty(sdkId) || TextUtils.isEmpty(privateKey)) {
                 submitRetry += 1
@@ -144,9 +137,8 @@ class AppTracker(private val context: Context) : IAppTracker {
                     "submitInstalledApps",
                     "sdkId & privateKey empty -> waiting sdkId to submit"
                 )
-                DeviceTracking.getSDKId(object : DeviceTrackingListener {
+                sdkTracking.getSDKId(object : SdkTrackingListener {
                     override fun onComplete(result: String?) {
-                        super.onComplete(result)
                         submitInstalledApps()
                     }
                 })
@@ -155,7 +147,6 @@ class AppTracker(private val context: Context) : IAppTracker {
                 Log.d("submitInstalledApps", "deviceID empty -> waiting deviceId to submit")
                 DeviceTracking.getDeviceId(object : DeviceTrackingListener {
                     override fun onComplete(result: String?) {
-                        super.onComplete(result)
                         Log.d(
                             "submitInstalledApps",
                             "deviceID not empty -> submit install app: $result"
