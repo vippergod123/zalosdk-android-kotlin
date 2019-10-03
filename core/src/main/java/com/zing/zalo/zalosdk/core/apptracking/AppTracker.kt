@@ -17,8 +17,6 @@ import com.zing.zalo.zalosdk.core.servicemap.ServiceMapManager
 import org.json.JSONObject
 
 class AppTracker(private val context: Context) : IAppTracker {
-
-
     companion object {
         var packageNames = arrayListOf<String>()
         var installedPackagedNames = arrayListOf<String>()
@@ -121,7 +119,7 @@ class AppTracker(private val context: Context) : IAppTracker {
     * */
     fun submitInstalledApps() {
         try {
-            if (TextUtils.isEmpty(scanId) || submitRetry >= 5) {
+            if (installedPackagedNames.size == 0 || TextUtils.isEmpty(scanId) || submitRetry >= 5) {
                 Log.w("submitInstalledApps", "Submit fail more than maximum retries")
                 cleanUp()
                 return
@@ -169,7 +167,6 @@ class AppTracker(private val context: Context) : IAppTracker {
             Log.w("submitInstalledApps", ex)
         }
     }
-
 
     //#region private supportive method
     private fun postRequestSubmitInstalledApps(

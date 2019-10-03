@@ -18,12 +18,7 @@ import org.json.JSONObject
 import java.lang.ref.WeakReference
 
 @SuppressLint("StaticFieldLeak")
-//TODO: [done]
-// - Tách phần SDKID & Priate key ra module riêng, module này chỉ để gen device id
-// - getSDKID ko nên dùng chung callback với device id, nếu cần callback thì dùng interface khác
 object DeviceTracking : IDeviceTracking {
-
-
     private const val KEY_DEVICE_ID = "deviceId"
     private const val KEY_DEVICE_ID_EXPIRED_TIME = "expiredTime"
     private const val DID_FILE_NAME = "ddinfo2"
@@ -31,8 +26,8 @@ object DeviceTracking : IDeviceTracking {
     private lateinit var context: Context
 
     private var deviceId: String = ""
+    var sdkTracking: ISdkTracking? = null
     var deviceIdExpiredTime: Long = 0L
-    private var sdkTracking: SdkTracking? = null
 
     internal lateinit var getDeviceIdAsyncTask: GetDeviceIdAsyncTask
     var httpClient = HttpClient(
@@ -44,8 +39,6 @@ object DeviceTracking : IDeviceTracking {
 
     fun init(ctx: Context, listener: DeviceTrackingListener?) {
         context = ctx.applicationContext
-
-        sdkTracking = SdkTracking(context)
 
         loadDeviceIdSetting()
         runGetDeviceIdAsyncTask(listener)
@@ -60,31 +53,26 @@ object DeviceTracking : IDeviceTracking {
     }
 
     override fun getDeviceId(listener: DeviceTrackingListener?) {
-
         if (!TextUtils.isEmpty(getDeviceId())) {
             listener?.onComplete(getDeviceId())
-            if (!isDeviceIdExpired()) return
-
+            if (isDeviceIdValid()) return
         }
 
         runGetDeviceIdAsyncTask(listener)
     }
 
-
-    override fun setDeviceId(deviceId: String, expiredTime: String) {
+    fun setDeviceId(deviceId: String, expiredTime: String) {
         if (isContextInitialized()) return
 
         val data = JSONObject()
         data.put(KEY_DEVICE_ID, deviceId)
         data.put(KEY_DEVICE_ID_EXPIRED_TIME, expiredTime)
         Utils.writeToFile(context, data.toString(), DID_FILE_NAME)
-
     }
 
-    fun isDeviceIdExpired(): Boolean {
-        return System.currentTimeMillis() > deviceIdExpiredTime
+    private fun isDeviceIdValid(): Boolean {
+        return !TextUtils.isEmpty(deviceId) && System.currentTimeMillis() > deviceIdExpiredTime
     }
-
 
     //#region private supportive method
     private fun loadDeviceIdSetting() {
@@ -104,23 +92,6 @@ object DeviceTracking : IDeviceTracking {
         Log.v("loadDeviceIdSetting " + obj.toString())
     }
 
-    fun prepareDeviceIdData(context: Context): JSONObject {
-        val data = JSONObject()
-
-        try {
-            data.put("dId", DeviceInfo.getAdvertiseID(context))
-            data.put("aId", DeviceInfo.getAndroidId(context))
-            data.put("mod", DeviceInfo.getModel())
-            data.put("ser", DeviceInfo.getSerial())
-        } catch (e: Exception) {
-            Log.e("prepareDeviceIdData", e)
-        }
-
-        return data
-    }
-
-    //TODO: [done]
-    // ko nên throw exception, gây crash app, chỉ lên log error
     @Throws(Exception::class)
     private fun isContextInitialized(): Boolean {
         if (!::context.isInitialized)
@@ -131,7 +102,7 @@ object DeviceTracking : IDeviceTracking {
 
     private fun runGetDeviceIdAsyncTask(listener: DeviceTrackingListener?) {
         val currentMillis = System.currentTimeMillis()
-        if (isDeviceIdExpired()) {
+        if (!isDeviceIdValid()) {
             getDeviceIdAsyncTask = GetDeviceIdAsyncTask(
                 WeakReference(context), deviceId, currentMillis, listener
             )
@@ -147,18 +118,16 @@ object DeviceTracking : IDeviceTracking {
         private var listener: DeviceTrackingListener?
     ) : AsyncTask<Void, Void, JSONObject?>() {
 
-
         override fun doInBackground(vararg params: Void?): JSONObject? {
             val context = weakContext.get()
             try {
                 if (context == null) throw Exception("Context is null")
-                val sdkTracking = SdkTracking(context)
                 val storage = Storage(context)
 
-                val deviceIdData = prepareDeviceIdData(context)
-                val trackingData = sdkTracking.prepareTrackingData(currentDeviceId, timestamp)
+                val deviceIdData = DeviceInfo.trackingData(context)
+                val trackingData = AppInfo.trackingData(context, currentDeviceId, timestamp)
 
-                val sdkId = sdkTracking.getSDKId() ?: ""
+                val sdkId = sdkTracking?.getSDKId() ?: ""
                 val appId = AppInfo.getAppId(context)
                 val authCode = storage.getOAuthCode() ?: ""
 
@@ -194,8 +163,6 @@ object DeviceTracking : IDeviceTracking {
                 if (errorCode == 0) {
                     val data = jsonObject.getJSONObject("data")
                     val resultDeviceId = data.optString("deviceId")
-
-                    // expiredTime = duration + currentTime
                     val duration = data.optLong("expiredTime")
                     val expiredTime = duration + System.currentTimeMillis()
 
@@ -209,7 +176,6 @@ object DeviceTracking : IDeviceTracking {
 
                     return dataJson
                 }
-
 
             } catch (ex: JSONException) {
                 Log.e("GetDeviceIdAsyncTask", ex)
@@ -227,13 +193,7 @@ object DeviceTracking : IDeviceTracking {
             super.onPostExecute(result)
             val deviceId = result?.optString("deviceId")
             listener?.onComplete(deviceId)
-
-//            val data = result?.toString()
-//            listener?.onComplete(data)
             listener = null
         }
-
     }
-
-
 }

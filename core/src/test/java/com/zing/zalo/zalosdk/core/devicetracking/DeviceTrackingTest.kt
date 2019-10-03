@@ -7,6 +7,7 @@ import com.zing.zalo.devicetrackingsdk.DeviceTracking
 import com.zing.zalo.devicetrackingsdk.DeviceTrackingListener
 import com.zing.zalo.zalosdk.core.helper.AppTrackerHelper
 import com.zing.zalo.zalosdk.core.helper.DataHelper
+import com.zing.zalo.zalosdk.core.helper.TestUtils
 import com.zing.zalo.zalosdk.core.http.HttpClient
 import com.zing.zalo.zalosdk.core.http.HttpUrlEncodedRequest
 import io.mockk.*
@@ -37,8 +38,6 @@ class DeviceTrackingTest {
         DeviceTracking.init(context, null)
 
         //#3. Verify & assert
-        //TODO: [done]
-        // - Cái này là assert trên mock object, ko có ý nghĩa, phải dùng object thật cần test
         assertThat(DeviceTracking.getDeviceId()).isNotNull()
         verify(exactly = 0) { getDeviceIdAsyncTask.execute() }
     }
@@ -57,14 +56,10 @@ class DeviceTrackingTest {
         DeviceTracking.request = request
         DeviceTracking.httpClient = httpClient
 
-
         //#2. Run
         DeviceTracking.init(context, null)
 
-
         //#3. Verify & assert
-        //TODO: [done]
-        // - Cái này là assert trên mock object, ko có ý nghĩa, phải dùng object thật cần test
         assertThat(DeviceTracking.getDeviceId()).isEqualTo(AppTrackerHelper.deviceId)
         verifyRequestOnceForDeviceId(request)
     }
@@ -115,9 +110,4 @@ class DeviceTrackingTest {
             }
         })
     }
-    //TODO: cần test thêm các case: [done]
-    // - Chưa có cache: mock httpClient và trả về kết quả mong muống, sau đó assert DeviceTracking.getDeviceId()
-    // trả về device id đã mock trong http response
-    // - Device id đã expire: trả về cái cũ & đi request tiếp ở background
-    // - Tách test của sdk ra riêng
 }

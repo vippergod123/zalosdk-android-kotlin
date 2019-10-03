@@ -2,7 +2,6 @@ package com.zing.zalo.devicetrackingsdk
 
 import android.content.Context
 import android.os.AsyncTask
-import android.os.Build
 import android.text.TextUtils
 import com.zing.zalo.zalosdk.core.Constant
 import com.zing.zalo.zalosdk.core.helper.AppInfo
@@ -21,7 +20,7 @@ class SdkTracking(var context: Context) : ISdkTracking {
 
     internal lateinit var getSdkIdAsyncTask: GetSdkIdAsyncTask
 
-    override fun setSDKId(value: String) {
+    fun setSDKId(value: String) {
         sdkStorage.setString(Constant.sharedPreference.PREF_SDK_ID, value)
     }
 
@@ -29,7 +28,7 @@ class SdkTracking(var context: Context) : ISdkTracking {
         return sdkStorage.getString(Constant.sharedPreference.PREF_SDK_ID)
     }
 
-    override fun getSDKId(listener: SdkTrackingListener?) {
+    fun getSDKId(listener: SdkTrackingListener?) {
         val sdkId = getSDKId()
         if (!TextUtils.isEmpty(sdkId)) {
             listener?.onComplete(sdkId)
@@ -43,15 +42,10 @@ class SdkTracking(var context: Context) : ISdkTracking {
         return sdkStorage.getString(Constant.sharedPreference.PREF_PRIVATE_KEY)
     }
 
-
-    override fun setPrivateKey(value: String) {
+    fun setPrivateKey(value: String) {
         sdkStorage.setString(Constant.sharedPreference.PREF_PRIVATE_KEY, value)
     }
 
-    //-TODO: method này có thể bị gọi nhiều lần 1 lúc:
-    // - từ runGetInfoDeviceTask
-    // - từ getDeviceId
-    // cần tìm cơ chế lock
     fun runGetSdkIDAsyncTask(listener: SdkTrackingListener?) {
         if (!::getSdkIdAsyncTask.isInitialized)
             getSdkIdAsyncTask = GetSdkIdAsyncTask(
@@ -59,77 +53,6 @@ class SdkTracking(var context: Context) : ISdkTracking {
             )
         getSdkIdAsyncTask.execute()
     }
-
-    fun prepareTrackingData(currentDeviceId: String, ts: Long): JSONObject {
-        val data = JSONObject()
-        try {
-            data.put("pkg", AppInfo.getPackageName(context))
-            data.put("pl", "android")
-            data.put("osv", DeviceInfo.getOSVersion())
-
-            data.put("sdkv", Constant.VERSION)
-            data.put("sdkv", DeviceInfo.getSDKVersion())
-            data.put("an", AppInfo.getAppName(context)) //imp
-            data.put("av", AppInfo.getVersionName(context))
-//            data.put("dId", DeviceInfo.getAdvertiseID(context)) //imp
-
-
-            data.put("mod", DeviceInfo.getModel())
-            data.put("ss", DeviceInfo.getScreenSize(context))
-
-
-            data.put("mno", DeviceInfo.getMobileNetworkCode(context))
-            if (!TextUtils.isEmpty(currentDeviceId)) {
-                data.put("sId", currentDeviceId)
-            }
-
-            data.put("dId", DeviceInfo.getAdvertiseID(context))
-            data.put("adId", DeviceInfo.getAdvertiseID(context))
-
-            data.put("ins_pkg", AppInfo.getInstallerPackageName(context))
-            if (!TextUtils.isEmpty(AppInfo.getReferrer(context))) {
-                data.put("ref", AppInfo.getReferrer(context))
-            }
-            data.put("ins_dte", AppInfo.getInstallDate(context))
-            data.put("fst_ins_dte", AppInfo.getFirstInstallDate(context))
-            data.put("lst_ins_dte", AppInfo.getLastUpdate(context))
-            data.put("fst_run_dte", AppInfo.getFirstRunDate(context))
-            data.put("ts", ts.toString())
-            data.put("brd", DeviceInfo.getBrand())
-            data.put("dev", Build.DEVICE)
-            data.put("prd", DeviceInfo.getProduct())
-            data.put("adk_ver", Build.VERSION.SDK_INT)
-            data.put("mnft", DeviceInfo.getManufacturer())
-            data.put("dev_type", Build.TYPE)
-            data.put("avc", AppInfo.getVersionCode(context))
-            data.put("was_ins", AppInfo.isPreInstalled(context).toString())
-            data.put("dpi", context.resources.displayMetrics.density.toDouble())
-
-            val preloadInfo = DeviceInfo.getPreloadInfo(context)
-            data.put("preload", preloadInfo.preload)
-
-            data.put("preloadDefault", AppInfo.getPreloadChannel(context))
-            if (!preloadInfo.isPreloaded()) {
-                data.put("preloadFailed", preloadInfo.error)
-            }
-
-//            data.put("conn", DeviceInfo.getConnectionType(context))
-//            val loc = DeviceInfo.getLocation(context) // remove
-//            data.put("mac", DeviceInfo.getWLANMACAddress(context)) //remove
-//            data.put("ser", DeviceInfo.getSerial()) // remove
-//            data.put("lang", Locale.getDefault().toString()) // remove
-//            data.put("aId", DeviceInfo.getAndroidId(context)) // remove
-        } catch (e: Exception) {
-            Log.e("tracking", e)
-        }
-
-        return data
-    }
-
-
-    //#region private supportive method
-    //#endregion
-
 
     class GetSdkIdAsyncTask(
         private val weakContext: WeakReference<Context>,
@@ -148,7 +71,7 @@ class SdkTracking(var context: Context) : ISdkTracking {
             try {
                 if (context == null) throw Exception("Context is null")
 
-                val deviceIdData = DeviceTracking.prepareDeviceIdData(context).toString()
+                val deviceIdData = DeviceInfo.trackingData(context).toString()
                 request.addParameter("appId", AppInfo.getAppId(context))
                 request.addParameter("sdkv", DeviceInfo.getSDKVersion())
                 request.addParameter("pl", "android")
@@ -157,7 +80,6 @@ class SdkTracking(var context: Context) : ISdkTracking {
                 request.addParameter("screenSize", DeviceInfo.getScreenSize(context))
                 request.addParameter("device", deviceIdData)
                 request.addParameter("ref", AppInfo.getReferrer(context))
-
 
                 val jsonObject = httpClient.send(request).getJSON()
                 val errorCode = jsonObject?.getInt("error")
@@ -173,9 +95,6 @@ class SdkTracking(var context: Context) : ISdkTracking {
                     val sdkTracking = SdkTracking(context)
                     sdkTracking.setSDKId(sdkId)
                     sdkTracking.setPrivateKey(privateKey)
-
-//                    DeviceTracking.setSDKId(sdkId)
-//                    DeviceTracking.setPrivateKey(privateKey)
 
                     return dataJson
                 }
@@ -197,8 +116,6 @@ class SdkTracking(var context: Context) : ISdkTracking {
             listener?.onComplete(data)
             listener = null
         }
-
-
     }
 
 }
