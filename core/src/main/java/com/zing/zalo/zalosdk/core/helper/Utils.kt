@@ -2,11 +2,13 @@ package com.zing.zalo.zalosdk.core.helper
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.ActivityManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.os.Build
 import android.os.Environment
+import android.os.Process
 import com.zing.zalo.zalosdk.core.http.HttpClient
 import com.zing.zalo.zalosdk.core.http.HttpMultipartRequest
 import com.zing.zalo.zalosdk.core.log.Log
@@ -244,7 +246,7 @@ object Utils {
             )
             return readFileData(file)
         } catch (ex: FileNotFoundException) {
-            Log.v("readFromFile()", "file $filename not found in internal storage")
+            Log.w("readFromFile()", "file $filename not found in internal storage")
         } catch (e: Exception) {
             Log.e("readFromFile(): ", e)
         }
@@ -363,4 +365,20 @@ object Utils {
         return response.getJSON()
     }
 
+
+    fun getCurrentProcessName(context: Context): String {
+        try {
+            val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+            val myPid = Process.myPid()
+            for (processInfo in manager.runningAppProcesses) {
+                if (processInfo.pid == myPid) {
+                    return processInfo.processName
+                }
+            }
+
+            return context.packageName
+        } catch (ex: Exception) {
+            return "default"
+        }
+    }
 }

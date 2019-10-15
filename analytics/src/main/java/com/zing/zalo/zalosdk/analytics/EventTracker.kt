@@ -7,44 +7,71 @@ import android.os.Message
 import com.zing.zalo.devicetrackingsdk.DeviceTracking
 import com.zing.zalo.devicetrackingsdk.DeviceTrackingListener
 import com.zing.zalo.zalosdk.analytics.model.Event
+import com.zing.zalo.zalosdk.core.helper.AppInfo
+import com.zing.zalo.zalosdk.core.helper.DeviceInfo
+import com.zing.zalo.zalosdk.core.helper.Storage
+import com.zing.zalo.zalosdk.core.helper.Utils
+import com.zing.zalo.zalosdk.core.http.HttpClient
+import com.zing.zalo.zalosdk.core.http.HttpUrlEncodedRequest
 import com.zing.zalo.zalosdk.core.log.Log
+import com.zing.zalo.zalosdk.core.servicemap.ServiceMapManager
+import org.json.JSONArray
+import org.json.JSONObject
+import java.util.*
 
 class EventTracker(var context: Context) : IEventTracker {
 
 
     companion object {
         const val ACT_DISPATCH_EVENTS = 0x5000
-        const val ACT_PUSH_EVENTS = 0x5001
-        const val ACT_STORE_EVENTS = 0x5002
+        const val ACT_DISPATCH_EVENT_IMMEDIATE = 0x5001
+        const val ACT_PUSH_EVENTS = 0x5002
+        const val ACT_STORE_EVENTS = 0x5003
         const val ACT_LOAD_EVENTS = 0x5004
 
+        const val DELAY_SECOND = 2
+        var thread = HandlerThread("zdt-event-tracker", HandlerThread.MIN_PRIORITY)
+
+        init {
+            thread.start()
+        }
     }
 
+    var eventStorage = EventStorage(context)
 
-    var tempMaxEventStored = Constant.DEFAULT_MAX_EVENTS_STORED
-    var tempDipatchEventsInterval = Constant.DEFAULT_DISPATCH_EVENTS_INTERVAL
-    var tempStoreEventsInterval = Constant.DEFAULT_STORE_EVENTS_INTERVAL
-
-    private var thread = HandlerThread("zdt-event-tracker", HandlerThread.MIN_PRIORITY)
     private var handler: Handler
+    private var listener: EventTrackerListener? = null
 
-    private var eventStorage = EventStorage(context)
+    lateinit var dispatchHandler: Handler
+    var dispatchRunnable = object :Runnable {
+        override fun run() {
+            dispatchEvent()
+            dispatchHandler.postDelayed(this, DELAY_SECOND * 1000L)
+        }
+    }
+
+    internal var httpClient = HttpClient(
+        ServiceMapManager.urlFor(
+            ServiceMapManager.KEY_URL_CENTRALIZED
+        )
+    )
+    internal var request = HttpUrlEncodedRequest(Constant.core.api.API_TRACKING_URL)
 
     init {
-        thread.start()
+        Log.d("EventTracker", "start thread zdt-event-tracker")
         handler = Handler(thread.looper, Handler.Callback {
             this.handleMessage(it)
         })
 
-        val msg = Message()
-        msg.what = ACT_LOAD_EVENTS
-        handler.sendMessage(msg)
+        dispatchHandler = Handler(thread.looper)
 
-        Log.d("Event Tracker", "start thread zdt-event-tracker")
+        loadEvents()
     }
 
-    override fun addEvent(action: String, params: Map<String, String>) {
-        val event = Event(action, params)
+    //#region handle send message for method
+    override fun addEvent(action: String, params: Map<String, String>, timestamp: Long) {
+        /** @see handleMessage */
+        val event = Event(action, params, timestamp)
         val msg = Message()
         msg.what = ACT_PUSH_EVENTS
         msg.obj = event
@@ -52,43 +79,204 @@ class EventTracker(var context: Context) : IEventTracker {
     }
 
     override fun dispatchEvent() {
-        try {
-            run {
-                val msg = Message()
-                msg.what = ACT_DISPATCH_EVENTS
-                handler.sendMessage(msg)
-            }
-        } catch (ex: Exception) {
-            ex.printStackTrace()
-        }
+        /** @see handleMessage */
+        val msg = Message()
+        msg.what = ACT_DISPATCH_EVENTS
+        handler.sendMessage(msg)
     }
 
+    override fun dispatchEventImmediate(event: Event?) {
+        /** @see handleMessage */
+        if (event == null) return
+
+        val msg = Message()
+        msg.what = ACT_DISPATCH_EVENT_IMMEDIATE
+        msg.obj = event
+        handler.sendMessage(msg)
+    }
+
+    fun loadEvents() {
+        /** @see handleMessage */
+        val msg = Message()
+        msg.what = ACT_LOAD_EVENTS
+        handler.sendMessage(msg)
+    }
+
+    fun storeEvents() {
+        /** @see handleMessage */
+        val msg = Message()
+        msg.what = ACT_STORE_EVENTS
+        handler.sendMessage(msg)
+    }
+
+    //#endregion
+
+    fun setListener(listener: EventTrackerListener) {
+        this.listener = listener
+    }
+
+    fun runDispatchEventLoop(){
+        dispatchHandler.post(dispatchRunnable)
+    }
+
+    fun removeDispatchEventLoop() {
+        dispatchHandler.removeCallbacks(dispatchRunnable)
+    }
     //#region private supportive method
     private fun handleMessage(msg: Message): Boolean {
         when (msg.what) {
-            ACT_DISPATCH_EVENTS ->
+            ACT_DISPATCH_EVENTS -> {
+                Log.d("handleMessage", "ACT_DISPATCH_EVENTS")
                 DeviceTracking.getDeviceId(object : DeviceTrackingListener {
                     override fun onComplete(result: String?) {
-                        Log.d("handleMessage", result.toString())
+                        doDispatchEvent(EventStorage.events)
                     }
                 })
-
-
+            }
+            ACT_DISPATCH_EVENT_IMMEDIATE -> {
+                DeviceTracking.getDeviceId(object : DeviceTrackingListener {
+                    override fun onComplete(result: String?) {
+                        val e = mutableListOf<Event>()
+                        e.add(msg.obj as Event)
+                        doDispatchEvent(e)
+                    }
+                })
+            }
             ACT_STORE_EVENTS -> {
                 Log.d("handleMessage", "ACT_STORE_EVENTS")
-                eventStorage.storeEventToDevice()
+                eventStorage.storeEventsToDevice()
             }
-
             ACT_PUSH_EVENTS -> {
                 Log.d("handleMessage", "ACT_PUSH_EVENTS")
                 eventStorage.addEvent(msg.obj as Event)
             }
-
-            ACT_LOAD_EVENTS -> Log.d("handleMessage", "ACT_LOAD_EVENTS")
+            ACT_LOAD_EVENTS -> {
+                Log.d("handleMessage", "ACT_LOAD_EVENTS")
+                eventStorage.loadEventsFromDevice()
+            }
             else -> return false
         }
         return true
     }
+
+    private fun doDispatchEvent(events: List<Event>) {
+        val storage = Storage(context)
+
+        try {
+            if (events.isEmpty())
+                return
+
+            val appData = JSONArray()
+            val eventData = prepareEventData(events)
+            val zdId = DeviceTracking.getDeviceId() ?: ""
+
+            val an = AppInfo.getAppName(context)
+            val av = AppInfo.getVersionName(context)
+            val appId = AppInfo.getAppId(context)
+            val oauthCode = storage.getOAuthCode() ?: ""
+            val ts = Date().time.toString()
+            val strEventData = eventData.toString()
+            val strAppData = appData.toString()
+            val strSocialAcc = "[]"
+            val packageName = context.packageName
+            val params = arrayOf(
+                "pl",
+                "appId",
+                "oauthCode",
+                "data",
+                "apps",
+                "ts",
+                "zdId",
+                "an",
+                "av",
+                "et",
+                "gzip",
+                "socialAcc",
+                "packageName"
+            )
+            val values = arrayOf(
+                "android",
+                appId,
+                oauthCode,
+                strEventData,
+                strAppData,
+                ts,
+                zdId,
+                an,
+                av,
+                "0",
+                "0",
+                strSocialAcc,
+                packageName
+            )
+
+            val sig = Utils.getSignature(
+                params,
+                values,
+                Constant.core.key.TRK_SECRET_KEY
+            )
+            request.addParameter("pl", "android")
+            request.addParameter("appId", appId)
+            request.addParameter("oauthCode", oauthCode)
+            request.addParameter("zdId", zdId)
+            request.addParameter("data", strEventData)
+            request.addParameter("apps", strAppData)
+            request.addParameter("ts", ts)
+            request.addParameter("sig", sig)
+            request.addParameter("an", an)
+            request.addParameter("av", av)
+            request.addParameter("gzip", "0")
+            request.addParameter("et", "0")
+            request.addParameter("socialAcc", strSocialAcc)
+            request.addParameter("packageName", context.packageName)
+
+            val jsonObject = httpClient.send(request).getJSON() ?: return
+
+            val errorCode = jsonObject.getInt("error")
+            if (errorCode != 0) return
+
+            Log.d("doDispatchEvent", "success dispatch to server ")
+            eventStorage.clearEventStorage()
+            listener?.dispatchSuccess()
+        } catch (e: Exception) {
+            Log.e("doDispatchEvent", e)
+        }
+
+    }
+
+    private fun prepareEventData(events: List<Event>): JSONObject {
+        val data = JSONObject()
+        val deviceInfoData = DeviceInfo.trackingData(context)
+
+        val jsonEvents = JSONArray()
+        var jsonEvent: JSONObject
+
+        try {
+            for (e in events) {
+//                if (delegate != null) {
+//                    delegate.onDispatchEvent(e)
+//                }
+
+                jsonEvent = JSONObject()
+                val extras = e.params
+                if (extras.containsKey("name")) {
+                    jsonEvent.put("name", extras["name"])
+                }
+                jsonEvent.put("extras", extras)
+                jsonEvent.put("act", e.action)
+                jsonEvent.put("ts", e.timestamp)
+
+                jsonEvents.put(jsonEvent)
+            }
+            data.put("evt", jsonEvents)
+            data.put("dat", deviceInfoData)
+        } catch (ex: Exception) {
+            Log.w("prepareEventData", ex)
+        }
+
+        return data
+    }
+
     //#endregion
 
 }

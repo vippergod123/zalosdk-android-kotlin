@@ -2,45 +2,48 @@ package com.zing.zalo.zalosdk.analytics
 
 import android.content.Context
 import com.zing.zalo.zalosdk.analytics.model.Event
+import com.zing.zalo.zalosdk.analytics.sqlite.EventDataSource
 import com.zing.zalo.zalosdk.core.helper.Storage
-import com.zing.zalo.zalosdk.core.helper.Utils
-import com.zing.zalo.zalosdk.core.helper.UtilsJSON
 import com.zing.zalo.zalosdk.core.log.Log
-import org.json.JSONArray
-import org.json.JSONObject
 
 class EventStorage(context: Context) : Storage(context) {
 
 
+    private var eventDataSource = EventDataSource(context)
 
     companion object {
-        private const val EVENTS_FILE_NAME = "z-event-tracker"
         var events: MutableList<Event> = mutableListOf()
+        var newEvents:MutableList<Event> = mutableListOf()
     }
 
     fun addEvent(e: Event) {
-        events.add(e)
-    }
-
-
-    fun loadEvents() {
-        val obj = Utils.readFromFile(context, EVENTS_FILE_NAME)
-        Log.d("loadEvents",obj.toString())
-
-    }
-
-    fun storeEventToDevice() {
-        val jsonArray = JSONArray()
-        for (e in events) {
-            val data = JSONObject()
-            val params = UtilsJSON.mapToJSONObject(e.params)
-            data.put("params", params)
-            data.put("action", e.action)
-
-            jsonArray.put(data)
+        if (events.size >= Constant.DEFAULT_MAX_EVENTS_STORED) {
+            Log.d(
+                "EventStorage",
+                "addEvent: exceed max number of events" +
+                        " ${events.size} >" +
+                        "${Constant.DEFAULT_MAX_EVENTS_STORED}"
+            )
+            return
         }
-        val data = JSONObject()
-        data.put("data", jsonArray)
-        Utils.writeToFile(context, data.toString(), EVENTS_FILE_NAME)
+        events.add(e)
+        eventDataSource.insertEvent(e)
+    }
+
+
+    fun loadEventsFromDevice() {
+        events = eventDataSource.getListEvent() as MutableList<Event>
+    }
+
+    fun storeEventsToDevice() {
+        //Clear All data -> add new data
+        eventDataSource.clearEventsTable()
+        eventDataSource.insertEvent(events)
+        Log.d("storeEventsToDevice", "store events to device complete")
+    }
+
+    fun clearEventStorage() {
+        events.clear()
+        eventDataSource.clearEventsTable()
     }
 }

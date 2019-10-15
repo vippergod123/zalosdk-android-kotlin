@@ -1,6 +1,5 @@
 package com.zing.zalo.zalosdk.analytics.model
 
-import org.json.JSONObject
+import java.sql.Timestamp
 
-data class Event (var action:String, var params: Map<String, String>){
-}
+data class Event(var action: String, var params: Map<String, String>, var timestamp: Long)
