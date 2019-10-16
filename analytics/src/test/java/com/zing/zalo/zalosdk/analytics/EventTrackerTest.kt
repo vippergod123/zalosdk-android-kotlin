@@ -120,6 +120,7 @@ class EventTrackerTest {
         verifyRequest(request, 1)
     }
 
+    //TODO: thêm test nếu thất bại thì verify vẫn lưu event trong db.
 
 
     //#region private supportive method
@@ -173,7 +174,7 @@ class EventTrackerTest {
         verify(exactly = times) { request.addParameter("et", any()) }
         verify(exactly = times) { request.addParameter("socialAcc", any()) }
         verify(exactly = times) { request.addParameter("packageName", context.packageName) }
-
+        //TODO: verify preload info & preload default
     }
     //#endregion
 }

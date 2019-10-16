@@ -21,7 +21,8 @@ import java.util.*
 
 class EventTracker(var context: Context) : IEventTracker {
 
-
+    //TODO: check class này có thread safe hay ko?
+    // test thử trường hợp mạng yếu có block thread hay ko?
     companion object {
         const val ACT_DISPATCH_EVENTS = 0x5000
         const val ACT_DISPATCH_EVENT_IMMEDIATE = 0x5001
@@ -85,6 +86,7 @@ class EventTracker(var context: Context) : IEventTracker {
         handler.sendMessage(msg)
     }
 
+    //TODO: save, dispatch xong, thành công -> xoá
     override fun dispatchEventImmediate(event: Event?) {
         /** @see handleMessage */
         if (event == null) return
