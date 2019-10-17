@@ -3,13 +3,12 @@ package com.zing.zalo.zalosdk.demo
 import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.UiObjectNotFoundException
+import com.google.common.truth.Truth.assertThat
 import com.zing.zalo.zalosdk.analytics.EventStorage
 import com.zing.zalo.zalosdk.analytics.EventTracker
-import com.zing.zalo.zalosdk.core.helper.Utils
+import com.zing.zalo.zalosdk.core.helper.AppInfo
 import com.zing.zalo.zalosdk.demo.helper.DataHelper
 import io.mockk.MockKAnnotations
-import io.mockk.every
-import io.mockk.mockkObject
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -36,11 +35,10 @@ class EventTrackerTest : AppBase() {
     @Test
     @Throws(UiObjectNotFoundException::class, IOException::class)
     fun dispatchEventsToServer() {
-        mockkObject(Utils)
-        every { Utils.readFromFile(context, any()) } returns DataHelper.EVENT_STORED_IN_DEVICE
 
-        eventStorage.loadEventsFromDevice()
-
+        eventStorage.addEvent(DataHelper.mockEvent())
         eventsTracker.dispatchEvent()
+
+        assertThat(AppInfo.getPreloadChannel(context)).isEqualTo("OPPODATA")
     }
 }

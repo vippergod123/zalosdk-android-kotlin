@@ -255,32 +255,32 @@ object Utils {
         return null
     }
 
-    @SuppressLint("TrulyRandom")
-    @Throws(
-        NoSuchAlgorithmException::class,
-        NoSuchPaddingException::class,
-        InvalidKeyException::class,
-        InvalidAlgorithmParameterException::class,
-        IllegalBlockSizeException::class,
-        BadPaddingException::class,
-        UnsupportedEncodingException::class,
-        NoSuchProviderException::class
-    )
-    fun encrypt(keyInStr: String, dataToEncrypt: String): ByteArray {
-
-        val keyInBinary = keyInStr.toByteArray()
-        val vectorBytes = ByteArray(16)
-        for (i in 0..15) {
-            vectorBytes[i] = 0
-        }
-        val secretKeySpec = SecretKeySpec(keyInBinary, "AES")
-        val ivSpec = IvParameterSpec(vectorBytes)
-
-        val c = Cipher.getInstance("AES/CBC/PKCS5Padding")
-        c.init(Cipher.ENCRYPT_MODE, secretKeySpec, ivSpec)
-
-        return c.doFinal(dataToEncrypt.toByteArray(charset("UTF-8")))
-    }
+//    @SuppressLint("TrulyRandom")
+//    @Throws(
+//        NoSuchAlgorithmException::class,
+//        NoSuchPaddingException::class,
+//        InvalidKeyException::class,
+//        InvalidAlgorithmParameterException::class,
+//        IllegalBlockSizeException::class,
+//        BadPaddingException::class,
+//        UnsupportedEncodingException::class,
+//        NoSuchProviderException::class
+//    )
+//    fun encrypt(keyInStr: String, dataToEncrypt: String): ByteArray {
+//
+//        val keyInBinary = keyInStr.toByteArray()
+//        val vectorBytes = ByteArray(16)
+//        for (i in 0..15) {
+//            vectorBytes[i] = 0
+//        }
+//        val secretKeySpec = SecretKeySpec(keyInBinary, "AES")
+//        val ivSpec = IvParameterSpec(vectorBytes)
+//
+//        val c = Cipher.getInstance("AES/CBC/PKCS5Padding")
+//        c.init(Cipher.ENCRYPT_MODE, secretKeySpec, ivSpec)
+//
+//        return c.doFinal(dataToEncrypt.toByteArray(charset("UTF-8")))
+//    }
 
 
 

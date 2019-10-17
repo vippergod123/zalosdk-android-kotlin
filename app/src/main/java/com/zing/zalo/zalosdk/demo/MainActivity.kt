@@ -43,8 +43,6 @@ class MainActivity : AppCompatActivity(), ValidateOAuthCodeCallback, GetZaloLogi
 
     private lateinit var mStorage: AuthStorage
 
-    private lateinit var event: Event
-
     private val appTrackerListener: AppTrackerListener = object : AppTrackerListener {
         override fun onAppTrackerCompleted(
             didRun: Boolean,
@@ -78,8 +76,8 @@ class MainActivity : AppCompatActivity(), ValidateOAuthCodeCallback, GetZaloLogi
     }
 
     private val eventTrackerListener = object : EventTrackerListener {
-        override fun dispatchSuccess() {
-            super.dispatchSuccess()
+        override fun dispatchComplete() {
+            super.dispatchComplete()
             Log.d("got Main Activity ")
         }
     }
@@ -208,9 +206,7 @@ class MainActivity : AppCompatActivity(), ValidateOAuthCodeCallback, GetZaloLogi
         eventTrackingButton.setOnClickListener {
 
             val eventTracker = EventTracker(this)
-//            eventTracker.storeEvents()
-//            eventTracker.loadEvents()
-//            eventTracker.dispatchEvent()
+            eventTracker.addEvent(mockEvent())
             eventTracker.setListener(eventTrackerListener)
             eventTracker.runDispatchEventLoop()
         }
@@ -223,6 +219,17 @@ class MainActivity : AppCompatActivity(), ValidateOAuthCodeCallback, GetZaloLogi
     private fun showAlertDialog(message: String) {
         AlertDialog.Builder(this).setTitle(R.string.app_name).setMessage(message)
             .setPositiveButton(android.R.string.yes, null).show()
+    }
+
+    private fun mockEvent(): Event {
+        val timeStamp = System.currentTimeMillis()
+        val action = "action-$timeStamp"
+        val params = mutableMapOf<String,String>()
+
+
+        params["name"] = "datahelper-$timeStamp"
+        params["age"] = timeStamp.toString()
+        return Event(action,params,timeStamp)
     }
 
 }

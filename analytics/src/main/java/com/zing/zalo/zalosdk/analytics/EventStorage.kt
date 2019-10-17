@@ -13,7 +13,6 @@ class EventStorage(context: Context) : Storage(context) {
 
     companion object {
         var events: MutableList<Event> = mutableListOf()
-        var newEvents:MutableList<Event> = mutableListOf()
     }
 
     fun addEvent(e: Event) {
@@ -31,8 +30,9 @@ class EventStorage(context: Context) : Storage(context) {
     }
 
 
-    fun loadEventsFromDevice() {
+    fun loadEventsFromDevice(): List<Event> {
         events = eventDataSource.getListEvent() as MutableList<Event>
+        return events
     }
 
     fun storeEventsToDevice() {

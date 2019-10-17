@@ -129,8 +129,8 @@ object DeviceTracking : IDeviceTracking {
                 if (context == null) throw Exception("Context is null")
                 val storage = Storage(context)
 
-                val deviceIdData = DeviceInfo.trackingData(context)
-                val trackingData = AppInfo.trackingData(context, currentDeviceId, timestamp)
+                val deviceIdData = DeviceInfo.prepareDeviceIdData(context)
+                val trackingData = DeviceInfo.prepareTrackingData(context, currentDeviceId, timestamp)
 
                 val sdkId = sdkTracking?.getSDKId() ?: ""
                 val appId = AppInfo.getAppId(context)

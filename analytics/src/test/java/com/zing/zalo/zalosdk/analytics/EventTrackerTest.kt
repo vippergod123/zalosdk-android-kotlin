@@ -23,11 +23,11 @@ import org.json.JSONObject
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
-import org.robolectric.shadows.ShadowApplication
-import org.robolectric.shadows.ShadowLooper
+import java.io.File
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 
 @RunWith(RobolectricTestRunner::class)
@@ -62,32 +62,30 @@ class EventTrackerTest {
         val event = DataHelper.mockEvent()
         val okResult = "{\"error\":0,\"errorMsg\":\"Success\"}"
 
-
         eventTracker.setListener(object : EventTrackerListener {
-            override fun dispatchSuccess() {
-                super.dispatchSuccess()
+            override fun dispatchComplete() {
+                super.dispatchComplete()
                 Log.d("got here")
                 assertThat(EventStorage.events).isEmpty()
             }
         })
 
-
         every { httpClient.send(any()).getJSON() } returns JSONObject(okResult)
         eventTracker.httpClient = httpClient
         eventTracker.request = request
         //#2. Execute
-        eventTracker.loadEvents()
+//        eventTracker.loadEvents()
         eventTracker.addEvent(event.action, event.params, event.timestamp)
-        eventTracker.storeEvents()
         eventTracker.dispatchEvent()
 
 
         //wait for complete thread's task
         shadowOf(EventTracker.thread.looper).idle()
         //#3. verify
-        verifyRequest(request, 1)
+        val times = 1
+        verifyRequest(request, times)
+        verifyPreloadInfo()
     }
-
 
     @Test
     fun `dispatch Immediately Event To Server`() {
@@ -98,15 +96,13 @@ class EventTrackerTest {
         val event = DataHelper.mockEvent()
         val okResult = "{\"error\":0,\"errorMsg\":\"Success\"}"
 
-
         eventTracker.setListener(object : EventTrackerListener {
-            override fun dispatchSuccess() {
-                super.dispatchSuccess()
+            override fun dispatchComplete() {
+                super.dispatchComplete()
                 Log.d("got here")
                 assertThat(EventStorage.events).isEmpty()
             }
         })
-
 
         every { httpClient.send(any()).getJSON() } returns JSONObject(okResult)
         eventTracker.httpClient = httpClient
@@ -118,11 +114,85 @@ class EventTrackerTest {
 
         //#3. verify
         verifyRequest(request, 1)
+        verifyPreloadInfo()
     }
 
-    //TODO: thêm test nếu thất bại thì verify vẫn lưu event trong db.
+    //TODO: [done] thêm test nếu thất bại thì verify vẫn lưu event trong db.
+    @Test
+    fun `save events when http fail`() {
+        mockDataWithDeviceIdNotExpired()
+        DeviceTracking.init(context, null)
+        //#1. Setup mock
+        val event = DataHelper.mockEvent()
+        val failResult = "{\"params\":{\"name\":\"Luke\",\"age\":\"0\"},\"action\":\"0\"}"
 
 
+        eventTracker.setListener(object : EventTrackerListener {
+            override fun dispatchComplete() {
+                super.dispatchComplete()
+                Log.d("got here")
+                assertThat(EventStorage.events).isNotEmpty()
+            }
+        })
+
+        every { httpClient.send(any()).getJSON() } returns JSONObject(failResult)
+        eventTracker.httpClient = httpClient
+        eventTracker.request = request
+        //#2. Execute
+//        eventTracker.loadEvents()
+        eventTracker.addEvent(event.action, event.params, event.timestamp)
+        eventTracker.addEvent(event.action, event.params, event.timestamp)
+
+        eventTracker.dispatchEvent()
+
+
+        //wait for complete thread's task
+        shadowOf(EventTracker.thread.looper).idle()
+        //#3. verify
+        verifyRequest(request, 1)
+        verifyPreloadInfo()
+    }
+
+    val signal = CountDownLatch(1)
+
+    @Test
+    fun `test thread blocking`() {
+        //Todo: [done] test thử trường hợp mạng yếu có block thread hay ko?
+        // => khong block thread
+        mockDataWithDeviceIdNotExpired()
+        DeviceTracking.init(context, null)
+        //#1. Setup mock
+        val event = DataHelper.mockEvent()
+        val failResult = "{\"params\":{\"name\":\"Luke\",\"age\":\"0\"},\"action\":\"0\"}"
+
+        eventTracker.setListener(object : EventTrackerListener {
+            override fun dispatchComplete() {
+                super.dispatchComplete()
+                Log.d("got here")
+                assertThat(EventStorage.events).isNotEmpty()
+                signal.await(5, TimeUnit.SECONDS)
+            }
+        })
+
+        every { httpClient.send(any()).getJSON() } returns JSONObject(failResult)
+        eventTracker.httpClient = httpClient
+        eventTracker.request = request
+        //#2. Execute
+//        eventTracker.loadEvents()
+        eventTracker.addEvent(event.action, event.params, event.timestamp)
+        eventTracker.dispatchEvent()
+        eventTracker.addEvent(event.action, event.params, event.timestamp)
+
+
+        Log.d("Test Thread Blocking")
+        //wait for complete thread's task
+
+
+        shadowOf(EventTracker.thread.looper).idle()
+        //#3. verify
+        verifyRequestWithTimeOut(request, 1, 7)
+        verifyPreloadInfo()
+    }
     //#region private supportive method
 
     private fun mockDataWithDeviceIdExpired() {
@@ -156,25 +226,66 @@ class EventTrackerTest {
         every { AppInfo.getAppName(context) } returns AppInfoHelper.appName
         every { AppInfo.getAppId(context) } returns AppInfoHelper.appId
 
+        //returns data preloadInfo
+        every { Utils.readFileData(File("/data/etc/appchannel/zalo_appchannel.in")) } returns "${DataHelper.preloadInfo}:${DataHelper.preloadInfo}"
         every { DeviceTracking.getDeviceId() } returns DeviceHelper.deviceId
     }
 
+    private fun verifyRequestWithTimeOut(
+        request: HttpUrlEncodedRequest,
+        times: Int,
+        timeOut: Long
+    ) {
+        val delay = timeOut * 1000L
+        verify(exactly = times, timeout = delay) { request.addParameter("pl", "android") }
+        verify(exactly = times, timeout = delay) {
+            request.addParameter(
+                "appId",
+                AppInfoHelper.appId
+            )
+        }
+        verify(exactly = times, timeout = delay) { request.addParameter("oauthCode", any()) }
+        verify(exactly = times, timeout = delay) { request.addParameter("zdId", any()) }
+        verify(exactly = times, timeout = delay) { request.addParameter("data", any()) }
+        verify(exactly = times, timeout = delay) { request.addParameter("apps", any()) }
+        verify(exactly = times, timeout = delay) { request.addParameter("ts", any()) }
+        verify(exactly = times, timeout = delay) { request.addParameter("sig", any()) }
+        verify(exactly = times, timeout = delay) {
+            request.addParameter(
+                "an",
+                AppInfoHelper.appName
+            )
+        }
+        verify(exactly = times, timeout = delay) {
+            request.addParameter(
+                "av",
+                AppInfoHelper.versionName
+            )
+        }
+        verify(exactly = times, timeout = delay) { request.addParameter("gzip", any()) }
+        verify(exactly = times, timeout = delay) { request.addParameter("et", any()) }
+        verify(exactly = times, timeout = delay) { request.addParameter("socialAcc", any()) }
+        verify(exactly = times, timeout = delay) {
+            request.addParameter(
+                "packageName",
+                context.packageName
+            )
+        }
+
+
+    }
+
     private fun verifyRequest(request: HttpUrlEncodedRequest, times: Int) {
-        verify(exactly = times) { request.addParameter("pl", "android") }
-        verify(exactly = times) { request.addParameter("appId", AppInfoHelper.appId) }
-        verify(exactly = times) { request.addParameter("oauthCode", any()) }
-        verify(exactly = times) { request.addParameter("zdId", any()) }
-        verify(exactly = times) { request.addParameter("data", any()) }
-        verify(exactly = times) { request.addParameter("apps", any()) }
-        verify(exactly = times) { request.addParameter("ts", any()) }
-        verify(exactly = times) { request.addParameter("sig", any()) }
-        verify(exactly = times) { request.addParameter("an", AppInfoHelper.appName) }
-        verify(exactly = times) { request.addParameter("av", AppInfoHelper.versionName) }
-        verify(exactly = times) { request.addParameter("gzip", any()) }
-        verify(exactly = times) { request.addParameter("et", any()) }
-        verify(exactly = times) { request.addParameter("socialAcc", any()) }
-        verify(exactly = times) { request.addParameter("packageName", context.packageName) }
-        //TODO: verify preload info & preload default
+        verifyRequestWithTimeOut(request, times, 0L)
+    }
+
+    private fun verifyPreloadInfo() {
+        //TODO: [done]verify preload info & preload default
+        val times = 1
+        verify(exactly = times) { AppInfo.getPreloadChannel(context) }
+        verify(exactly = times) { DeviceInfo.getPreloadInfo(context) }
+        val preloadInfo = DeviceInfo.getPreloadInfo(context)
+        assertThat(preloadInfo.preload).isEqualTo(DataHelper.preloadInfo)
     }
     //#endregion
 }

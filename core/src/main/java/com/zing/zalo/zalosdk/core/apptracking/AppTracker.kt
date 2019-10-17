@@ -177,7 +177,7 @@ class AppTracker(private val context: Context) : IAppTracker {
         val appData = UtilsJSON.listToJSONArray(installedPackagedNames)
 
         val multipartRequest = HttpMultipartRequest(Constant.api.API_APP_TRACKING_ID_URL)
-        multipartRequest.addQueryStringParameter("et", "1")
+        multipartRequest.addQueryStringParameter("et", "0")
         multipartRequest.addQueryStringParameter("sdkId", sdkId)
         multipartRequest.addQueryStringParameter("gzip", "0")
 
@@ -194,10 +194,10 @@ class AppTracker(private val context: Context) : IAppTracker {
         jsonData.put("apps", appData)
 
         val data = jsonData.toString()
-        val encodeData = Utils.encrypt(privateKey, data)
+//        val encodeData = Utils.encrypt(privateKey, data)
 
         val responseData =
-            Utils.postFile(httpClient, multipartRequest, "data.dat", "zce", encodeData, null)
+            Utils.postFile(httpClient, multipartRequest, "data.dat", "zce", data.toByteArray(), null)
 
         Log.v("submitInstalledApps", "submit app tracking to server with result $responseData")
         val error = responseData?.getInt("error")
