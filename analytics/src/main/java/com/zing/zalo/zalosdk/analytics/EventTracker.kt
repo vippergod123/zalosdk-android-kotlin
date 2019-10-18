@@ -28,13 +28,13 @@ class EventTracker(var context: Context) : IEventTracker {
         const val ACT_DISPATCH_EVENTS = 0x5000
         const val ACT_DISPATCH_EVENT_IMMEDIATE = 0x5001
         const val ACT_PUSH_EVENTS = 0x5002
-//        const val ACT_STORE_EVENTS = 0x5003
-//        const val ACT_LOAD_EVENTS = 0x5004
 
         const val DELAY_SECOND = 120
+        private var isDispatchHandlerRunning = false
         var thread = HandlerThread("zdt-event-tracker", HandlerThread.MIN_PRIORITY)
 
         init {
+            Log.d("EventTracker", "start thread zdt-event-tracker")
             thread.start()
         }
     }
@@ -60,14 +60,11 @@ class EventTracker(var context: Context) : IEventTracker {
     internal var request = HttpUrlEncodedRequest(Constant.core.api.API_TRACKING_URL)
 
     init {
-        Log.d("EventTracker", "start thread zdt-event-tracker")
         handler = Handler(thread.looper, Handler.Callback {
             this.handleMessage(it)
         })
 
         dispatchHandler = Handler(thread.looper)
-
-//        loadEvents()
     }
 
     //#region handle send message for method
@@ -130,7 +127,10 @@ class EventTracker(var context: Context) : IEventTracker {
     }
 
     fun runDispatchEventLoop() {
-        dispatchHandler.post(dispatchRunnable)
+        if (!isDispatchHandlerRunning) {
+            isDispatchHandlerRunning = true
+            dispatchHandler.post(dispatchRunnable)
+        }
     }
 
     //#region private supportive method

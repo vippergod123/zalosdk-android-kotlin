@@ -23,8 +23,8 @@ object ZaloSDK
     private var mStorage: AuthStorage? = null
 
     private var isInitialized = false
-    private var sdkTracking: SdkTracking? = null
-    private var deviceTracking: IDeviceTracking? = null
+//    private var sdkTracking: SdkTracking? = null
+//    private var deviceTracking: IDeviceTracking? = null
 
 
     /**
@@ -39,15 +39,15 @@ object ZaloSDK
         isInitialized = true
         mStorage = AuthStorage(ctx)
         mAuthenticator = Authenticator(ctx, mStorage!!)
-        sdkTracking = SdkTracking(ctx)
-
-        DeviceTracking.sdkTracking = sdkTracking
-        DeviceTracking.init(ctx, object :DeviceTrackingListener {
-            override fun onComplete(result: String?) {
-                SettingsManager(ctx).init()
-            }
-        })
-        deviceTracking = DeviceTracking
+//        sdkTracking = SdkTracking(ctx)
+//
+//        DeviceTracking.sdkTracking = sdkTracking
+//        DeviceTracking.init(ctx, object :DeviceTrackingListener {
+//            override fun onComplete(result: String?) {
+//                SettingsManager(ctx).init()
+//            }
+//        })
+//        deviceTracking = DeviceTracking
     }
 
     /**
