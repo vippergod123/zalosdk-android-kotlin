@@ -126,7 +126,13 @@ class EventTracker(var context: Context) : IEventTracker {
         this.listener = listener
     }
 
-    fun runDispatchEventLoop() {
+
+    /**
+     * dispatch event loop every DELAY_SECOND
+     * @see com.zing.zalo.provider.ZaloBaseSDK.runDispatchEvent
+     * method is called by reflection Kotlin (@see class above)
+     */
+    private fun runDispatchEventLoop() {
         if (!isDispatchHandlerRunning) {
             isDispatchHandlerRunning = true
             dispatchHandler.post(dispatchRunnable)

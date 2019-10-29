@@ -50,6 +50,9 @@ dependencies {
     testImplementation 'org.json:json:20140107'
 
     testImplementation 'io.mockk:mockk:1.9.3'
+
+    //Todo: check the under-line
+    implementation "org.jetbrains.kotlin:kotlin-reflect:1.3.50"
 }
 repositories {
     mavenCentral()

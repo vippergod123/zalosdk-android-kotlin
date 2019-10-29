@@ -58,7 +58,7 @@ class MainActivity : AppCompatActivity(), ValidateOAuthCodeCallback, GetZaloLogi
 
     }
 
-    private val listener = object : IAuthenticateCompleteListener {
+    private val authenticateListener = object : IAuthenticateCompleteListener {
         @SuppressLint("SetTextI18n")
         override fun onAuthenticateSuccess(uid: Long, code: String, data: Map<String, Any>) {
             val displayName = data[Constant.user.DISPLAY_NAME]
@@ -91,8 +91,6 @@ class MainActivity : AppCompatActivity(), ValidateOAuthCodeCallback, GetZaloLogi
         bindUI()
         configureUI()
         bindViewsListener()
-
-
     }
 
 
@@ -156,7 +154,7 @@ class MainActivity : AppCompatActivity(), ValidateOAuthCodeCallback, GetZaloLogi
         authCodeTextView = findViewById(R.id.auth_code_text_view)
         loginStatusTextView = findViewById(R.id.login_status_text_view)
 
-        ZaloSDK.initialize(this)
+//        ZaloSDK.initialize(this)
     }
 
     @SuppressLint("SetTextI18n")
@@ -172,21 +170,21 @@ class MainActivity : AppCompatActivity(), ValidateOAuthCodeCallback, GetZaloLogi
     private fun bindViewsListener() {
         loginMobileButton.setOnClickListener {
             ZaloSDK.unAuthenticate()
-            ZaloSDK.authenticate(this, LoginVia.APP, listener)
+            ZaloSDK.authenticate(this, LoginVia.APP, authenticateListener)
         }
 
         loginWebButton.setOnClickListener {
             ZaloSDK.unAuthenticate()
-            ZaloSDK.authenticate(this, LoginVia.WEB, listener)
+            ZaloSDK.authenticate(this, LoginVia.WEB, authenticateListener)
         }
         loginViaButton.setOnClickListener {
             ZaloSDK.unAuthenticate()
-            ZaloSDK.authenticate(this, LoginVia.APP_OR_WEB, listener)
+            ZaloSDK.authenticate(this, LoginVia.APP_OR_WEB, authenticateListener)
         }
 
         registerButton.setOnClickListener {
             //			ZaloSDK.unAuthenticate()
-            ZaloSDK.registerZalo(this, listener)
+            ZaloSDK.registerZalo(this, authenticateListener)
         }
 
         validateButton.setOnClickListener {
@@ -206,9 +204,10 @@ class MainActivity : AppCompatActivity(), ValidateOAuthCodeCallback, GetZaloLogi
         eventTrackingButton.setOnClickListener {
 
             val eventTracker = EventTracker(this)
-            eventTracker.addEvent(mockEvent())
+//            eventTracker.addEvent(mockEvent())
             eventTracker.setListener(eventTrackerListener)
-            eventTracker.runDispatchEventLoop()
+//            eventTracker.runDispatchEventLoop()
+            eventTracker.dispatchEventImmediate(mockEvent())
         }
     }
 

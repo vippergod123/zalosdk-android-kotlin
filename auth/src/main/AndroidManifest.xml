@@ -11,5 +11,7 @@
                 android:windowSoftInputMode="stateHidden|stateAlwaysHidden"
                 android:configChanges="orientation|screenSize"
                 android:screenOrientation="sensor" />
+
+
     </application>
 </manifest>

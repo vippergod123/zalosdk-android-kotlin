@@ -43,7 +43,10 @@ object DeviceTracking : IDeviceTracking {
 
         loadDeviceIdSetting()
 
-        if (isDeviceIdValid()) return
+        if (isDeviceIdValid()) {
+            listener?.onComplete(deviceId)
+            return
+        }
 
         runGetDeviceIdAsyncTask(listener)
     }

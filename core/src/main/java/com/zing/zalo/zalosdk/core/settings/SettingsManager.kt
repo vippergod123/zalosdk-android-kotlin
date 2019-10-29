@@ -40,7 +40,7 @@ class SettingsManager(private val context: Context) {
     var httpClient = HttpClient(ServiceMapManager.urlFor(ServiceMapManager.KEY_URL_CENTRALIZED))
 
     fun init() {
-        val deviceId = DeviceTracking.getDeviceId() ?:""
+        val deviceId = DeviceTracking.getDeviceId() ?: ""
         if (isExpiredSetting())
             GetSDKSettingAsyncTask(context, deviceId, httpClient, wakeUpStorage).execute()
     }
@@ -72,9 +72,11 @@ class SettingsManager(private val context: Context) {
 }
 
 
-class GetSDKSettingAsyncTask(context: Context, private val zdId: String,
-                             private val httpClient: HttpClient,
-                             private val storage: PrivateSharedPreferenceInterface) :
+class GetSDKSettingAsyncTask(
+    context: Context, private val zdId: String,
+    private val httpClient: HttpClient,
+    private val storage: PrivateSharedPreferenceInterface
+) :
     AsyncTask<Void, Void, String>() {
 
     companion object {
@@ -84,6 +86,7 @@ class GetSDKSettingAsyncTask(context: Context, private val zdId: String,
         const val WEB_VIEW_LOGIN = "webview_login"
         const val IS_OUT_APP_LOGIN = "isOutAppLogin"
     }
+
     private val weakRefContext: WeakReference<Context> = WeakReference(context)
 
     override fun doInBackground(vararg p0: Void?): String? {
@@ -105,13 +108,25 @@ class GetSDKSettingAsyncTask(context: Context, private val zdId: String,
             if (errorCode != 0) throw Exception("ErrorCode != 0")
 
             val data = jsonObject.getJSONObject("data")
-            storage.setBoolean(KEY_SETTINGS_OUT_APP_LOGIN, Utils.getBoolean(data,IS_OUT_APP_LOGIN) ?: false)
-            storage.setBoolean(KEY_SETTINGS_WEB_VIEW, Utils.getBoolean(data,WEB_VIEW_LOGIN) ?: false)
+            storage.setBoolean(
+                KEY_SETTINGS_OUT_APP_LOGIN,
+                Utils.getBoolean(data, IS_OUT_APP_LOGIN) ?: false
+            )
+            storage.setBoolean(
+                KEY_SETTINGS_WEB_VIEW,
+                Utils.getBoolean(data, WEB_VIEW_LOGIN) ?: false
+            )
 
             val settingData = data.getJSONObject("setting")
-            storage.setBoolean(KEY_WAKEUP_ENABLE, Utils.getBoolean(settingData,WAKEUP_INTERVAL_ENABLE) ?: false)
+            storage.setBoolean(
+                KEY_WAKEUP_ENABLE,
+                Utils.getBoolean(settingData, WAKEUP_INTERVAL_ENABLE) ?: false
+            )
             storage.setLong(KEY_WAKEUP_INTERVAL, settingData.optLong(WAKEUP_INTERVAL))
-            storage.setLong(KEY_EXPIRE_TIME, System.currentTimeMillis() + settingData.optLong(EXPIRED_TIME))
+            storage.setLong(
+                KEY_EXPIRE_TIME,
+                System.currentTimeMillis() + settingData.optLong(EXPIRED_TIME)
+            )
 
             return "success"
         } catch (ex: Exception) {

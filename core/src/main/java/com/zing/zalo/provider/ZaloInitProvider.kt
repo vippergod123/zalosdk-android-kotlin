@@ -43,7 +43,8 @@ class ZaloInitProvider: ContentProvider() {
     //#endregion
 
     override fun onCreate(): Boolean {
-        ZaloBaseApp.initializeApp(context)
+        Log.d("run Zalo Provider")
+        ZaloBaseSDK.initializeApp(context)
         return false
     }
 
