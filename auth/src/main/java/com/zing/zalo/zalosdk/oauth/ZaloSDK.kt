@@ -23,7 +23,6 @@ object ZaloSDK {
 
     /**
      * Initialize the SDK
-     * @param app Application
      * @see com.zing.zalo.provider.ZaloBaseSDK.zaloAuthInit
      * method is called by reflection Kotlin (@see class above)
      */

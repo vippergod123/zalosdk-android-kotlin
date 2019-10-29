@@ -4,6 +4,7 @@ import android.content.ContentProvider
 import android.content.ContentValues
 import android.database.Cursor
 import android.net.Uri
+import com.zing.zalo.zalosdk.core.log.Log
 
 class ZaloInitProvider: ContentProvider() {
 
