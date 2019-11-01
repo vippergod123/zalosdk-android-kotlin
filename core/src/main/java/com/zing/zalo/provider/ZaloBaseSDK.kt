@@ -34,6 +34,7 @@ object ZaloBaseSDK {
         SettingsManager(ctx).init()
         runDispatchEvent(ctx)
         zaloAuthInit(ctx)
+        openApiInit(ctx)
     }
 
     private fun runDispatchEvent(ctx: Context) {
@@ -61,7 +62,18 @@ object ZaloBaseSDK {
         } catch (e: Exception) {
             Log.e("zaloAuthInit", e)
         }
+    }
 
+    private fun openApiInit(ctx: Context) {
+        try {
+            val openApiClass = Class.forName("com.zing.zalo.zalosdk.openapi.ZaloOpenApi").kotlin
+            val openApi = openApiClass.objectInstance ?: openApiClass.java.newInstance()
+            val initOpenApiMethod = openApi::class.java.getDeclaredMethod("init", Context::class.java)
+            initOpenApiMethod.isAccessible = true // set Accessible private method
+            initOpenApiMethod.invoke(openApi, ctx)
+        } catch (e: Exception) {
+            Log.e("openApiInit", e)
+        }
     }
 
 }

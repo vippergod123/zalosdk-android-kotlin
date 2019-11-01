@@ -160,11 +160,11 @@ class Authenticator(val mContext: Context, private val mStorage: AuthStorage) :
             )
         )
         try {
-            url.append(ZaloSDK.getAppID(activity))
+            url.append(AppInfo.getAppIdLong(activity))
                 .append("&sign_key=")
                 .append(URLEncoder.encode(AppInfo.getApplicationHashKey(activity), "UTF-8"))
                 .append("&pkg_name=")
-                .append(URLEncoder.encode(activity.getPackageName(), "UTF-8"))
+                .append(URLEncoder.encode(activity.packageName, "UTF-8"))
                 .append("&orientation=")
                 .append(activity.resources.configuration.orientation)
                 .append("&ts=").append(System.currentTimeMillis())
@@ -222,7 +222,6 @@ class Authenticator(val mContext: Context, private val mStorage: AuthStorage) :
 
     override fun onActivityResult(activity: Activity, requestCode: Int, resultCode: Int, data: Intent?): Boolean {
         if (requestCode == Constant.ZALO_AUTHENTICATE_REQUEST_CODE) {
-            Constant.core.sharedPreference.PREF_ACCESS_TOKEN_NEW_API
             receiveAuthData(activity, data)
             return true
         }

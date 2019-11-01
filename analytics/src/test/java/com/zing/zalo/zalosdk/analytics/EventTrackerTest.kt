@@ -117,7 +117,6 @@ class EventTrackerTest {
         verifyPreloadInfo()
     }
 
-    //TODO: [done] thêm test nếu thất bại thì verify vẫn lưu event trong db.
     @Test
     fun `save events when http fail`() {
         mockDataWithDeviceIdNotExpired()
@@ -157,8 +156,6 @@ class EventTrackerTest {
 
     @Test
     fun `test thread blocking`() {
-        //Todo: [done] test thử trường hợp mạng yếu có block thread hay ko?
-        // => khong block thread
         mockDataWithDeviceIdNotExpired()
         DeviceTracking.init(context, null)
         //#1. Setup mock
@@ -280,7 +277,6 @@ class EventTrackerTest {
     }
 
     private fun verifyPreloadInfo() {
-        //TODO: [done]verify preload info & preload default
         val times = 1
         verify(exactly = times) { AppInfo.getPreloadChannel(context) }
         verify(exactly = times) { DeviceInfo.getPreloadInfo(context) }

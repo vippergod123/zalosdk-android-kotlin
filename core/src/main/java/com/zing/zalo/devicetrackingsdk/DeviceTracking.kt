@@ -79,7 +79,7 @@ object DeviceTracking : IDeviceTracking {
     }
 
     private fun isDeviceIdValid(): Boolean {
-        return !TextUtils.isEmpty(deviceId) && System.currentTimeMillis() > deviceIdExpiredTime
+        return !TextUtils.isEmpty(deviceId) &&   deviceIdExpiredTime > System.currentTimeMillis()
     }
 
     //#region private supportive method

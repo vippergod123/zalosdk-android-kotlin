@@ -12,7 +12,6 @@ import androidx.appcompat.app.AppCompatActivity
 import com.zing.zalo.zalosdk.analytics.EventTracker
 import com.zing.zalo.zalosdk.analytics.EventTrackerListener
 import com.zing.zalo.zalosdk.analytics.model.Event
-import com.zing.zalo.zalosdk.core.apptracking.AppTracker
 import com.zing.zalo.zalosdk.core.apptracking.AppTrackerListener
 import com.zing.zalo.zalosdk.core.helper.AppInfo
 import com.zing.zalo.zalosdk.core.log.Log
@@ -33,7 +32,7 @@ class MainActivity : AppCompatActivity(), ValidateOAuthCodeCallback, GetZaloLogi
     private lateinit var registerButton: Button
     private lateinit var validateButton: Button
     private lateinit var checkAppLoginButton: Button
-    private lateinit var appTrackingButton: Button
+    private lateinit var openApiButton: Button
     private lateinit var eventTrackingButton: Button
 
     private lateinit var appIDTextView: TextView
@@ -146,7 +145,7 @@ class MainActivity : AppCompatActivity(), ValidateOAuthCodeCallback, GetZaloLogi
         registerButton = findViewById(R.id.register_button)
         validateButton = findViewById(R.id.validate_oauth_code_button)
         checkAppLoginButton = findViewById(R.id.check_app_login_button)
-        appTrackingButton = findViewById(R.id.app_tracking_button)
+        openApiButton = findViewById(R.id.open_api_button)
         eventTrackingButton = findViewById(R.id.event_tracking_button)
 
         appIDTextView = findViewById(R.id.app_id_text_view)
@@ -195,18 +194,14 @@ class MainActivity : AppCompatActivity(), ValidateOAuthCodeCallback, GetZaloLogi
             ZaloSDK.getZaloLoginStatus(this)
         }
 
-        appTrackingButton.setOnClickListener {
-            val appTracker = AppTracker(this)
-            appTracker.setListener(appTrackerListener)
-            appTracker.run()
+        openApiButton.setOnClickListener {
+            val activity2Intent = Intent(this, OpenApiActivity::class.java)
+            startActivity(activity2Intent)
         }
 
         eventTrackingButton.setOnClickListener {
-
             val eventTracker = EventTracker(this)
-//            eventTracker.addEvent(mockEvent())
             eventTracker.setListener(eventTrackerListener)
-//            eventTracker.runDispatchEventLoop()
             eventTracker.dispatchEventImmediate(mockEvent())
         }
     }
@@ -223,12 +218,12 @@ class MainActivity : AppCompatActivity(), ValidateOAuthCodeCallback, GetZaloLogi
     private fun mockEvent(): Event {
         val timeStamp = System.currentTimeMillis()
         val action = "action-$timeStamp"
-        val params = mutableMapOf<String,String>()
+        val params = mutableMapOf<String, String>()
 
 
         params["name"] = "datahelper-$timeStamp"
         params["age"] = timeStamp.toString()
-        return Event(action,params,timeStamp)
+        return Event(action, params, timeStamp)
     }
 
 }

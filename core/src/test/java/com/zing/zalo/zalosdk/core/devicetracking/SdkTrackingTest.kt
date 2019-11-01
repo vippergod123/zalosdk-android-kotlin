@@ -40,6 +40,7 @@ class SdkTrackingTest {
         val sdkTracking = spyk(SdkTracking(context))
         val returnResult = "ABCSAD"
         every { sdkStorage.getString(Constant.sharedPreference.PREF_SDK_ID) } returns returnResult
+        every { sdkTracking getProperty "enableUnitTest" }  returns true
         sdkTracking.sdkStorage = sdkStorage
 
         //#2. Run
@@ -62,6 +63,8 @@ class SdkTrackingTest {
         val httpClient = mockk<HttpClient>(relaxUnitFun = true)
 
         every { sdkStorage.getString(Constant.sharedPreference.PREF_SDK_ID) } returns null
+        every { sdkTracking getProperty "enableUnitTest" }  returns true
+
         sdkTracking.sdkStorage = sdkStorage
         val getSdkIdAsyncTask = SdkTracking.GetSdkIdAsyncTask(WeakReference(context), null)
 

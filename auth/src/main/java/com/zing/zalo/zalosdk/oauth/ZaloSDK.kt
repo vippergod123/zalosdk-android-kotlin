@@ -80,13 +80,6 @@ object ZaloSDK {
         return false
     }
 
-    /**
-     * Get the current app id
-     * @return App id
-     */
-    fun getAppID(context: Context): Long {
-        return AppInfo.getAppIdLong(context)
-    }
 
 
     fun getVersion(): String {
@@ -117,7 +110,7 @@ object ZaloSDK {
         if (isInitialized && mAuthenticator != null)
             return true
 
-        Log.d("Missing call declare com.zing.zalo.zalosdk.oauth.ZaloSDKApplication in Application or call wrap init")
+        Log.e("Missing call declare com.zing.zalo.zalosdk.oauth.ZaloSDKApplication in Application or call wrap init")
         return false
     }
 

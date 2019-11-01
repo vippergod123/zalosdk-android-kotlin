@@ -12,21 +12,17 @@ import android.os.Process
 import com.zing.zalo.zalosdk.core.http.HttpClient
 import com.zing.zalo.zalosdk.core.http.HttpMultipartRequest
 import com.zing.zalo.zalosdk.core.log.Log
+import org.jetbrains.annotations.NotNull
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.*
 import java.lang.Double.parseDouble
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
-import java.net.HttpURLConnection
-import java.security.*
+import java.security.MessageDigest
+import java.security.NoSuchAlgorithmException
 import java.util.*
-import javax.crypto.BadPaddingException
-import javax.crypto.Cipher
-import javax.crypto.IllegalBlockSizeException
-import javax.crypto.NoSuchPaddingException
-import javax.crypto.spec.IvParameterSpec
-import javax.crypto.spec.SecretKeySpec
+import java.util.concurrent.TimeUnit
 
 object Utils {
     private var language: String? = null
@@ -165,7 +161,7 @@ object Utils {
                 builder.append(str)
             }
             builder.append(secretKey)
-            Log.v("getSignature","bsig: $builder")
+            Log.v("getSignature", "bsig: $builder")
             return md5(builder.toString())
         } catch (ex: Exception) {
             Log.e("Utils: getSignature()", ex)
@@ -283,8 +279,6 @@ object Utils {
 //    }
 
 
-
-
     //#region private supportive method
     private fun md5(input: String): String {
         var res = ""
@@ -358,7 +352,7 @@ object Utils {
         otherParams: Map<String, String>?
     ): JSONObject? {
 
-        multipartRequest.setFileParameter(fileKey,fileName,data)
+        multipartRequest.setFileParameter(fileKey, fileName, data)
 
         val response = httpClient.send(multipartRequest)
 
@@ -379,6 +373,15 @@ object Utils {
             return context.packageName
         } catch (ex: Exception) {
             return "default"
+        }
+    }
+
+    fun convertTimeToMilliSeconds(@NotNull time: Int,@NotNull unit: TimeUnit): Long {
+        return when (unit) {
+            TimeUnit.SECONDS -> time * 1000L
+            TimeUnit.HOURS -> time * 3600 * 1000L
+            TimeUnit.MINUTES -> time * 60 * 1000L
+            else -> time.toLong()
         }
     }
 }

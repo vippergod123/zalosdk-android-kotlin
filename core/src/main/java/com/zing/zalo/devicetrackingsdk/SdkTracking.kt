@@ -46,8 +46,15 @@ class SdkTracking(var context: Context) : ISdkTracking {
         sdkStorage.setString(Constant.sharedPreference.PREF_PRIVATE_KEY, value)
     }
 
+    private val enableUnitTest by lazy { false }
     fun runGetSdkIDAsyncTask(listener: SdkTrackingListener?) {
-        if (!::getSdkIdAsyncTask.isInitialized)
+        //Todo: [important] checking here - will crash when this function run twice
+//        if (!::getSdkIdAsyncTask.isInitialized)
+//            getSdkIdAsyncTask = GetSdkIdAsyncTask(
+//                WeakReference(context), listener
+//            )
+
+        if (!enableUnitTest)
             getSdkIdAsyncTask = GetSdkIdAsyncTask(
                 WeakReference(context), listener
             )
