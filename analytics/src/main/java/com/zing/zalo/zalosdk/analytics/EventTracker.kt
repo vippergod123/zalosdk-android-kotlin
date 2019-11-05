@@ -26,6 +26,7 @@ class EventTracker(var context: Context) : IEventTracker {
         const val ACT_PUSH_EVENTS = 0x5002
 
         const val DELAY_SECOND = 120
+
         private var isDispatchHandlerRunning = false
         var thread = HandlerThread("zdt-event-tracker", HandlerThread.MIN_PRIORITY)
 
@@ -56,6 +57,7 @@ class EventTracker(var context: Context) : IEventTracker {
     internal var request = HttpUrlEncodedRequest(Constant.core.api.API_TRACKING_URL)
 
     init {
+        Log.d("EventTracker", "start thread zdt-event-tracker")
         handler = Handler(thread.looper, Handler.Callback {
             this.handleMessage(it)
         })
@@ -101,26 +103,11 @@ class EventTracker(var context: Context) : IEventTracker {
         handler.sendMessage(msg)
     }
 
-//    fun loadEvents() {
-//        /** @see handleMessage */
-//        val msg = Message()
-//        msg.what = ACT_LOAD_EVENTS
-//        handler.sendMessage(msg)
-//    }
-
-//    fun storeEvents() {
-//        /** @see handleMessage */
-//        val msg = Message()
-//        msg.what = ACT_STORE_EVENTS
-//        handler.sendMessage(msg)
-//    }
-
     //#endregion
 
     fun setListener(listener: EventTrackerListener) {
         this.listener = listener
     }
-
 
     /**
      * dispatch event loop every DELAY_SECOND
@@ -139,8 +126,8 @@ class EventTracker(var context: Context) : IEventTracker {
         when (msg.what) {
             ACT_DISPATCH_EVENTS -> {
                 Log.d("handleMessage", "ACT_DISPATCH_EVENTS")
-                DeviceTracking.getDeviceId(object : DeviceTrackingListener {
-                    override fun onComplete(result: String?) {
+                DeviceTracking.getInstance().getDeviceId(object : DeviceTrackingListener {
+                    override fun onComplete(result: String) {
                         val events = eventStorage.loadEventsFromDevice()
                         doDispatchEvent(events)
                     }
@@ -148,8 +135,8 @@ class EventTracker(var context: Context) : IEventTracker {
             }
             ACT_DISPATCH_EVENT_IMMEDIATE -> {
                 Log.d("handleMessage", "ACT_DISPATCH_EVENT_IMMEDIATE")
-                DeviceTracking.getDeviceId(object : DeviceTrackingListener {
-                    override fun onComplete(result: String?) {
+                DeviceTracking.getInstance().getDeviceId(object : DeviceTrackingListener {
+                    override fun onComplete(result: String) {
                         val e = mutableListOf<Event>()
                         e.add(msg.obj as Event)
                         eventStorage.addEvent(msg.obj as Event)
@@ -161,14 +148,6 @@ class EventTracker(var context: Context) : IEventTracker {
                 Log.d("handleMessage", "ACT_PUSH_EVENTS")
                 eventStorage.addEvent(msg.obj as Event)
             }
-//            ACT_STORE_EVENTS -> {
-//                Log.d("handleMessage", "ACT_STORE_EVENTS")
-//                eventStorage.storeEventsToDevice()
-//            }
-//            ACT_LOAD_EVENTS -> {
-//                Log.d("handleMessage", "ACT_LOAD_EVENTS")
-//                eventStorage.loadEventsFromDevice()
-//            }
             else -> return false
         }
         return true
@@ -183,7 +162,7 @@ class EventTracker(var context: Context) : IEventTracker {
 
             val appData = JSONArray()
             val eventData = prepareEventData(events)
-            val zdId = DeviceTracking.getDeviceId() ?: ""
+            val zdId = DeviceTracking.getInstance().getDeviceId() ?: ""
 
             val an = AppInfo.getAppName(context)
             val av = AppInfo.getVersionName(context)
@@ -245,10 +224,11 @@ class EventTracker(var context: Context) : IEventTracker {
             request.addParameter("socialAcc", strSocialAcc)
             request.addParameter("packageName", context.packageName)
 
-            val jsonObject = httpClient.send(request).getJSON() ?: return
+            val resp = httpClient.send(request)
+            val jsonObject = resp.getJSON() ?: return
 
             val errorCode = jsonObject.getInt("error")
-            if (errorCode != 0) return
+            if (errorCode != 0 && resp.responseCode < 400) return
 
             Log.d("doDispatchEvent", "success dispatch to server ")
             eventStorage.clearEventStorage()
@@ -258,13 +238,14 @@ class EventTracker(var context: Context) : IEventTracker {
             eventStorage.storeEventsToDevice()
             listener?.dispatchComplete()
         }
-
     }
 
     @Throws(Exception::class)
     private fun prepareEventData(events: List<Event>): JSONObject {
         val data = JSONObject()
-        val deviceInfoData = DeviceInfo.prepareTrackingData(context, DeviceTracking.getDeviceId()?: "", System.currentTimeMillis())
+        val deviceId = DeviceTracking.getInstance().getDeviceId() ?: ""
+        val ts = System.currentTimeMillis()
+        val deviceInfoData = DeviceInfo.prepareTrackingData(context, deviceId, ts)
 
         val jsonEvents = JSONArray()
         var jsonEvent: JSONObject

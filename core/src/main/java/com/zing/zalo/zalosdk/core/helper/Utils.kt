@@ -12,17 +12,21 @@ import android.os.Process
 import com.zing.zalo.zalosdk.core.http.HttpClient
 import com.zing.zalo.zalosdk.core.http.HttpMultipartRequest
 import com.zing.zalo.zalosdk.core.log.Log
-import org.jetbrains.annotations.NotNull
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.*
 import java.lang.Double.parseDouble
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
-import java.security.MessageDigest
-import java.security.NoSuchAlgorithmException
+import java.net.HttpURLConnection
+import java.security.*
 import java.util.*
-import java.util.concurrent.TimeUnit
+import javax.crypto.BadPaddingException
+import javax.crypto.Cipher
+import javax.crypto.IllegalBlockSizeException
+import javax.crypto.NoSuchPaddingException
+import javax.crypto.spec.IvParameterSpec
+import javax.crypto.spec.SecretKeySpec
 
 object Utils {
     private var language: String? = null
@@ -279,6 +283,8 @@ object Utils {
 //    }
 
 
+
+
     //#region private supportive method
     private fun md5(input: String): String {
         var res = ""
@@ -342,22 +348,6 @@ object Utils {
         return null
     }
 
-    @Throws(Exception::class)
-    fun postFile(
-        httpClient: HttpClient,
-        multipartRequest: HttpMultipartRequest,
-        fileName: String,
-        fileKey: String,
-        data: ByteArray,
-        otherParams: Map<String, String>?
-    ): JSONObject? {
-
-        multipartRequest.setFileParameter(fileKey, fileName, data)
-
-        val response = httpClient.send(multipartRequest)
-
-        return response.getJSON()
-    }
 
 
     fun getCurrentProcessName(context: Context): String {
@@ -384,4 +374,6 @@ object Utils {
             else -> time.toLong()
         }
     }
+=======
+>>>>>>> feature/sdk_provider_merge
 }

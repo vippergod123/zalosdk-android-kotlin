@@ -9,11 +9,16 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.zing.zalo.devicetrackingsdk.DeviceTracking
+import com.zing.zalo.devicetrackingsdk.SdkTracking
 import com.zing.zalo.zalosdk.analytics.EventTracker
 import com.zing.zalo.zalosdk.analytics.EventTrackerListener
 import com.zing.zalo.zalosdk.analytics.model.Event
+import com.zing.zalo.zalosdk.core.apptracking.AppTracker
 import com.zing.zalo.zalosdk.core.apptracking.AppTrackerListener
+import com.zing.zalo.zalosdk.core.apptracking.AppTrackerStorage
 import com.zing.zalo.zalosdk.core.helper.AppInfo
+import com.zing.zalo.zalosdk.core.helper.Storage
 import com.zing.zalo.zalosdk.core.log.Log
 import com.zing.zalo.zalosdk.core.servicemap.ServiceMapManager
 import com.zing.zalo.zalosdk.oauth.Constant
@@ -32,7 +37,7 @@ class MainActivity : AppCompatActivity(), ValidateOAuthCodeCallback, GetZaloLogi
     private lateinit var registerButton: Button
     private lateinit var validateButton: Button
     private lateinit var checkAppLoginButton: Button
-    private lateinit var openApiButton: Button
+    private lateinit var appTrackingButton: Button
     private lateinit var eventTrackingButton: Button
 
     private lateinit var appIDTextView: TextView
@@ -86,7 +91,6 @@ class MainActivity : AppCompatActivity(), ValidateOAuthCodeCallback, GetZaloLogi
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         Log.setLogLevel()
-        ServiceMapManager.load(this)
         bindUI()
         configureUI()
         bindViewsListener()
@@ -95,7 +99,7 @@ class MainActivity : AppCompatActivity(), ValidateOAuthCodeCallback, GetZaloLogi
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        ZaloSDK.onActivityResult(this, requestCode, resultCode, data)
+        ZaloSDK.getInstance().onActivityResult(this, requestCode, resultCode, data)
     }
     //#endregion
 
@@ -145,7 +149,11 @@ class MainActivity : AppCompatActivity(), ValidateOAuthCodeCallback, GetZaloLogi
         registerButton = findViewById(R.id.register_button)
         validateButton = findViewById(R.id.validate_oauth_code_button)
         checkAppLoginButton = findViewById(R.id.check_app_login_button)
+<<<<<<< HEAD
         openApiButton = findViewById(R.id.open_api_button)
+=======
+        appTrackingButton = findViewById(R.id.app_tracking_button)
+>>>>>>> feature/sdk_provider_merge
         eventTrackingButton = findViewById(R.id.event_tracking_button)
 
         appIDTextView = findViewById(R.id.app_id_text_view)
@@ -168,39 +176,47 @@ class MainActivity : AppCompatActivity(), ValidateOAuthCodeCallback, GetZaloLogi
 
     private fun bindViewsListener() {
         loginMobileButton.setOnClickListener {
-            ZaloSDK.unAuthenticate()
-            ZaloSDK.authenticate(this, LoginVia.APP, authenticateListener)
+            ZaloSDK.getInstance().unAuthenticate()
+            ZaloSDK.getInstance().authenticate(this, LoginVia.APP, authenticateListener)
         }
 
         loginWebButton.setOnClickListener {
-            ZaloSDK.unAuthenticate()
-            ZaloSDK.authenticate(this, LoginVia.WEB, authenticateListener)
+            ZaloSDK.getInstance().unAuthenticate()
+            ZaloSDK.getInstance().authenticate(this, LoginVia.WEB, authenticateListener)
         }
         loginViaButton.setOnClickListener {
-            ZaloSDK.unAuthenticate()
-            ZaloSDK.authenticate(this, LoginVia.APP_OR_WEB, authenticateListener)
+            ZaloSDK.getInstance().unAuthenticate()
+            ZaloSDK.getInstance().authenticate(this, LoginVia.APP_OR_WEB, authenticateListener)
         }
 
         registerButton.setOnClickListener {
             //			ZaloSDK.unAuthenticate()
-            ZaloSDK.registerZalo(this, authenticateListener)
+            ZaloSDK.getInstance().registerZalo(this, authenticateListener)
         }
 
         validateButton.setOnClickListener {
-            ZaloSDK.isAuthenticate(this)
+            ZaloSDK.getInstance().isAuthenticate(this)
         }
 
         checkAppLoginButton.setOnClickListener {
-            ZaloSDK.getZaloLoginStatus(this)
+            ZaloSDK.getInstance().getZaloLoginStatus(this)
         }
 
-        openApiButton.setOnClickListener {
-            val activity2Intent = Intent(this, OpenApiActivity::class.java)
-            startActivity(activity2Intent)
+        appTrackingButton.setOnClickListener {
+            val appTracker = AppTracker()
+            appTracker.sdkTracking = SdkTracking.getInstance()
+            appTracker.deviceId = DeviceTracking.getInstance().getDeviceId() ?: ""
+            appTracker.storage = Storage(applicationContext)
+            appTracker.appTrackerStorage = AppTrackerStorage(applicationContext)
+            appTracker.listener = appTrackerListener
+            appTracker.start(applicationContext)
         }
 
         eventTrackingButton.setOnClickListener {
+
             val eventTracker = EventTracker(this)
+
+            eventTracker.addEvent(mockEvent())
             eventTracker.setListener(eventTrackerListener)
             eventTracker.dispatchEventImmediate(mockEvent())
         }
@@ -218,12 +234,12 @@ class MainActivity : AppCompatActivity(), ValidateOAuthCodeCallback, GetZaloLogi
     private fun mockEvent(): Event {
         val timeStamp = System.currentTimeMillis()
         val action = "action-$timeStamp"
-        val params = mutableMapOf<String, String>()
+        val params = mutableMapOf<String,String>()
 
 
         params["name"] = "datahelper-$timeStamp"
         params["age"] = timeStamp.toString()
-        return Event(action, params, timeStamp)
+        return Event(action,params,timeStamp)
     }
 
 }

@@ -7,33 +7,31 @@ import android.content.Intent
 import com.zing.zalo.zalosdk.core.helper.AppInfo
 import com.zing.zalo.zalosdk.core.helper.Utils
 import com.zing.zalo.zalosdk.core.log.Log
+import com.zing.zalo.zalosdk.core.module.BaseModule
+import com.zing.zalo.zalosdk.core.module.ModuleManager
 import com.zing.zalo.zalosdk.oauth.callback.GetZaloLoginStatus
 import com.zing.zalo.zalosdk.oauth.callback.ValidateOAuthCodeCallback
 import com.zing.zalo.zalosdk.oauth.helper.AuthStorage
 
 @SuppressLint("StaticFieldLeak")
-object ZaloSDK {
+class ZaloSDK : BaseModule() {
+    companion object {
+        private val instance = ZaloSDK()
+        fun getInstance(): ZaloSDK { return instance }
+
+        init {
+            ModuleManager.addModule(instance)
+        }
+    }
+
     private var mAuthenticator: IAuthenticator? = null
     private var mStorage: AuthStorage? = null
 
-    private var isInitialized = false
-//    private var sdkTracking: SdkTracking? = null
-//    private var deviceTracking: IDeviceTracking? = null
+    override fun onStart(context: Context) {
+        super.onStart(context)
 
-
-    /**
-     * Initialize the SDK
-     * @see com.zing.zalo.provider.ZaloBaseSDK.zaloAuthInit
-     * method is called by reflection Kotlin (@see class above)
-     */
-    private fun initialize(context: Context) {
-        if (isInitialized)
-            return
-
-        val ctx = context.applicationContext
-        isInitialized = true
-        mStorage = AuthStorage(ctx)
-        mAuthenticator = Authenticator(ctx, mStorage!!)
+        mStorage = AuthStorage(context)
+        mAuthenticator = Authenticator(context, mStorage!!)
         Log.d("ZaloSDK", "ZaloSDK isInitialized")
     }
 
@@ -80,6 +78,13 @@ object ZaloSDK {
         return false
     }
 
+    /**
+     * Get the current app id
+     * @return App id
+     */
+    fun getAppID(context: Context): Long {
+        return AppInfo.getAppIdLong(context)
+    }
 
 
     fun getVersion(): String {
@@ -107,10 +112,10 @@ object ZaloSDK {
 
 
     private fun checkInitialize(): Boolean {
-        if (isInitialized && mAuthenticator != null)
+        if (hasContext && mAuthenticator != null)
             return true
 
-        Log.e("Missing call declare com.zing.zalo.zalosdk.oauth.ZaloSDKApplication in Application or call wrap init")
+        Log.d("Missing call declare com.zing.zalo.zalosdk.oauth.ZaloSDKApplication in Application or call wrap init")
         return false
     }
 

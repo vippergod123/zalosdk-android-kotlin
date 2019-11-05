@@ -1,4 +1,4 @@
-package com.zing.zalo.provider
+package com.zing.zalo.zalosdk.core.module
 
 import android.content.ContentProvider
 import android.content.ContentValues
@@ -6,7 +6,7 @@ import android.database.Cursor
 import android.net.Uri
 import com.zing.zalo.zalosdk.core.log.Log
 
-class ZaloInitProvider: ContentProvider() {
+class ZaloSDKInitProvider: ContentProvider() {
 
     //#region methods not involved
     override fun insert(uri: Uri, values: ContentValues?): Uri? {
@@ -44,8 +44,7 @@ class ZaloInitProvider: ContentProvider() {
     //#endregion
 
     override fun onCreate(): Boolean {
-        Log.d("run Zalo Provider")
-        ZaloBaseSDK.initializeApp(context)
+        ModuleManager.initializeApp(context.applicationContext)
         return false
     }
 

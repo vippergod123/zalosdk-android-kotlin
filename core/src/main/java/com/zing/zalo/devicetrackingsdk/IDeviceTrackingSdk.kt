@@ -13,7 +13,3 @@ interface ISdkTracking {
     fun getSDKId(): String?
     fun getPrivateKey(): String?
 }
-
-interface SdkTrackingListener {
-    fun onComplete(result: String?)
-}

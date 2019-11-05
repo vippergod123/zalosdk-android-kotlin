@@ -57,7 +57,7 @@ class EventTrackerTest {
     @Test
     fun `dispatch Event To Server`() {
         mockDataWithDeviceIdNotExpired()
-        DeviceTracking.init(context, null)
+//        DeviceTracking.init(context, null)
         //#1. Setup mock
         val event = DataHelper.mockEvent()
         val okResult = "{\"error\":0,\"errorMsg\":\"Success\"}"
@@ -90,7 +90,11 @@ class EventTrackerTest {
     @Test
     fun `dispatch Immediately Event To Server`() {
         mockDataWithDeviceIdNotExpired()
+<<<<<<< HEAD
         DeviceTracking.init(context, null)
+=======
+//        DeviceTracking.init(context, null)
+>>>>>>> feature/sdk_provider_merge
 
         //#1. Setup mock
         val event = DataHelper.mockEvent()
@@ -120,7 +124,11 @@ class EventTrackerTest {
     @Test
     fun `save events when http fail`() {
         mockDataWithDeviceIdNotExpired()
+<<<<<<< HEAD
         DeviceTracking.init(context, null)
+=======
+//        DeviceTracking.init(context, null)
+>>>>>>> feature/sdk_provider_merge
         //#1. Setup mock
         val event = DataHelper.mockEvent()
         val failResult = "{\"params\":{\"name\":\"Luke\",\"age\":\"0\"},\"action\":\"0\"}"
@@ -157,7 +165,7 @@ class EventTrackerTest {
     @Test
     fun `test thread blocking`() {
         mockDataWithDeviceIdNotExpired()
-        DeviceTracking.init(context, null)
+//        DeviceTracking.init(context, null)
         //#1. Setup mock
         val event = DataHelper.mockEvent()
         val failResult = "{\"params\":{\"name\":\"Luke\",\"age\":\"0\"},\"action\":\"0\"}"
@@ -225,7 +233,11 @@ class EventTrackerTest {
 
         //returns data preloadInfo
         every { Utils.readFileData(File("/data/etc/appchannel/zalo_appchannel.in")) } returns "${DataHelper.preloadInfo}:${DataHelper.preloadInfo}"
+<<<<<<< HEAD
         every { DeviceTracking.getDeviceId() } returns DeviceHelper.deviceId
+=======
+//        every { DeviceTracking.getDeviceId() } returns DeviceHelper.deviceId
+>>>>>>> feature/sdk_provider_merge
     }
 
     private fun verifyRequestWithTimeOut(

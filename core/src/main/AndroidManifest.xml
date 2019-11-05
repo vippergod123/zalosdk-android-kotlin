@@ -4,7 +4,7 @@
     <application>
         <provider
                 android:authorities="{$applicationId}.zaloinitprovider"
-                android:name="com.zing.zalo.provider.ZaloInitProvider"
+                android:name="com.zing.zalo.zalosdk.core.module.ZaloSDKInitProvider"
                 android:exported="false" />
     </application>
 </manifest>
