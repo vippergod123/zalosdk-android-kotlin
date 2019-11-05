@@ -57,7 +57,7 @@ class OpenApiActivity : AppCompatActivity(), ZaloOpenApiCallback {
         }
         getFriendListInvitableButton.setOnClickListener {
             val fields = arrayOf("id", "name", "gender", "picture")
-            ZaloOpenApi.getFriendListInvitable(this, 0, 999, this, fields)
+            ZaloOpenApi.getFriendListInvitable( 0, 999, this, fields)
 
         }
         inviteFriendUseAppButton.setOnClickListener {

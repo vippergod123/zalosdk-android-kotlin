@@ -1,7 +1,7 @@
 package com.zing.zalo.devicetrackingsdk
 
 interface DeviceTrackingListener {
-    fun onComplete(result: String?)
+    fun onComplete(result: String)
 }
 
 interface IDeviceTracking {

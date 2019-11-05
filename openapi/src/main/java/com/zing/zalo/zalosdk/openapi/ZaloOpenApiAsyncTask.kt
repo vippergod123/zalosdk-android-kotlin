@@ -79,7 +79,7 @@ class GetAccessTokenAsyncTask(
         request.addQueryStringParameter("pkg_name", AppInfo.getPackageName(context))
         request.addQueryStringParameter("sign_key", AppInfo.getApplicationHashKey(context) ?: "")
         request.addQueryStringParameter("app_id", AppInfo.getAppId(context) + "")
-        request.addQueryStringParameter("version", ZaloSDK.getVersion())
+        request.addQueryStringParameter("version", ZaloSDK.getInstance().getVersion())
         request.addQueryStringParameter(
             "zdevice",
             DeviceInfo.prepareDeviceIdData(context).toString()
@@ -88,12 +88,12 @@ class GetAccessTokenAsyncTask(
             "ztracking",
             DeviceInfo.prepareTrackingData(
                 context,
-                DeviceTracking.getDeviceId() ?: "",
+                DeviceTracking.getInstance().getDeviceId() ?: "",
                 System.currentTimeMillis()
             ).toString()
 
         )
-        request.addHeader("gid", DeviceTracking.getDeviceId() ?: "")
+        request.addHeader("gid", DeviceTracking.getInstance().getDeviceId() ?: "")
 
         val jsonObject = httpClient.send(request).getJSON() ?: return null
         val errorCode = jsonObject.getInt("error")

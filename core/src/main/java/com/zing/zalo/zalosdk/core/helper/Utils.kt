@@ -12,6 +12,7 @@ import android.os.Process
 import com.zing.zalo.zalosdk.core.http.HttpClient
 import com.zing.zalo.zalosdk.core.http.HttpMultipartRequest
 import com.zing.zalo.zalosdk.core.log.Log
+import org.jetbrains.annotations.NotNull
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.*
@@ -21,6 +22,7 @@ import java.lang.reflect.Method
 import java.net.HttpURLConnection
 import java.security.*
 import java.util.*
+import java.util.concurrent.TimeUnit
 import javax.crypto.BadPaddingException
 import javax.crypto.Cipher
 import javax.crypto.IllegalBlockSizeException
@@ -366,7 +368,7 @@ object Utils {
         }
     }
 
-    fun convertTimeToMilliSeconds(@NotNull time: Int,@NotNull unit: TimeUnit): Long {
+    fun convertTimeToMilliSeconds(@NotNull time: Int, @NotNull unit: TimeUnit): Long {
         return when (unit) {
             TimeUnit.SECONDS -> time * 1000L
             TimeUnit.HOURS -> time * 3600 * 1000L
@@ -374,6 +376,4 @@ object Utils {
             else -> time.toLong()
         }
     }
-=======
->>>>>>> feature/sdk_provider_merge
 }

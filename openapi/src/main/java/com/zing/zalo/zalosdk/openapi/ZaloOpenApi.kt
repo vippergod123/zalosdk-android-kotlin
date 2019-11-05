@@ -82,14 +82,12 @@ object ZaloOpenApi {
      * Lấy danh sách bạn bè chưa sử dụng ứng dụng và có thể nhắn tin mời sử dụng ứng dụng
      * http://developers.zaloapp.com/docs/api/open-api/tai-lieu/danh-sach-ban-be-post-34
      *
-     * @param ctx      The context call this method
      * @param position position
      * @param count    count
      * @param callback
      * @param fields   : Hỗ trợ các field: id, name, picture, gender
      */
     fun getFriendListInvitable(
-        ctx: Context,
         position: Int,
         count: Int,
         callback: ZaloOpenApiCallback,

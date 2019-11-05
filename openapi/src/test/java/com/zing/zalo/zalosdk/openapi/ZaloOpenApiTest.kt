@@ -3,9 +3,10 @@ package com.zing.zalo.zalosdk.openapi
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
-import com.zing.zalo.provider.ZaloBaseSDK
 import com.zing.zalo.zalosdk.core.http.HttpClient
 import com.zing.zalo.zalosdk.core.http.HttpUrlEncodedRequest
+import com.zing.zalo.zalosdk.core.module.ModuleManager
+import com.zing.zalo.zalosdk.oauth.ZaloSDK
 import com.zing.zalo.zalosdk.oauth.helper.AuthStorage
 import com.zing.zalo.zalosdk.openapi.helper.AppInfoHelper
 import com.zing.zalo.zalosdk.openapi.helper.DataHelper
@@ -42,7 +43,7 @@ class ZaloOpenApiTest {
         authStorage = AuthStorage(context)
         authStorage.setAuthCode("auth_code_abc")
         AppInfoHelper.setup()
-        ZaloBaseSDK.initializeApp(context)
+        ModuleManager.initializeApp(context)
     }
 
     @Test

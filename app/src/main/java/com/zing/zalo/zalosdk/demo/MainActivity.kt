@@ -39,6 +39,7 @@ class MainActivity : AppCompatActivity(), ValidateOAuthCodeCallback, GetZaloLogi
     private lateinit var checkAppLoginButton: Button
     private lateinit var appTrackingButton: Button
     private lateinit var eventTrackingButton: Button
+    private lateinit var openApiButton: Button
 
     private lateinit var appIDTextView: TextView
     private lateinit var loginStatusTextView: TextView
@@ -149,11 +150,7 @@ class MainActivity : AppCompatActivity(), ValidateOAuthCodeCallback, GetZaloLogi
         registerButton = findViewById(R.id.register_button)
         validateButton = findViewById(R.id.validate_oauth_code_button)
         checkAppLoginButton = findViewById(R.id.check_app_login_button)
-<<<<<<< HEAD
         openApiButton = findViewById(R.id.open_api_button)
-=======
-        appTrackingButton = findViewById(R.id.app_tracking_button)
->>>>>>> feature/sdk_provider_merge
         eventTrackingButton = findViewById(R.id.event_tracking_button)
 
         appIDTextView = findViewById(R.id.app_id_text_view)
