@@ -5,7 +5,6 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import com.zing.zalo.zalosdk.core.helper.AppInfo
-import com.zing.zalo.zalosdk.core.helper.Utils
 import com.zing.zalo.zalosdk.core.log.Log
 import com.zing.zalo.zalosdk.core.module.BaseModule
 import com.zing.zalo.zalosdk.core.module.ModuleManager
@@ -17,22 +16,25 @@ import com.zing.zalo.zalosdk.oauth.helper.AuthStorage
 class ZaloSDK : BaseModule() {
     companion object {
         private val instance = ZaloSDK()
-        fun getInstance(): ZaloSDK { return instance }
+        private var mAuthenticator: IAuthenticator? = null
+        private var mStorage: AuthStorage? = null
+
+        fun getInstance(): ZaloSDK {
+            return instance
+        }
 
         init {
             ModuleManager.addModule(instance)
         }
     }
 
-    private var mAuthenticator: IAuthenticator? = null
-    private var mStorage: AuthStorage? = null
+
 
     override fun onStart(context: Context) {
         super.onStart(context)
 
         mStorage = AuthStorage(context)
         mAuthenticator = Authenticator(context, mStorage!!)
-        Log.d("ZaloSDK", "ZaloSDK isInitialized")
     }
 
     /**
@@ -51,6 +53,9 @@ class ZaloSDK : BaseModule() {
     }
 
 
+    /**
+     * Logout current Zalo's account
+     */
     fun unAuthenticate() {
         if (checkInitialize())
             mAuthenticator?.unAuthenticate()
@@ -95,9 +100,9 @@ class ZaloSDK : BaseModule() {
      * Set language for ZaloSDK
      * language: vi, my
      */
-    private fun setLanguageSDK(language: String) {
-        Utils.setLanguage(language)
-    }
+//    private fun setLanguageSDK(language: String) {
+//        Utils.setLanguage(language)
+//    }
 
     fun onActivityResult(
         activity: Activity,
@@ -112,12 +117,9 @@ class ZaloSDK : BaseModule() {
 
 
     private fun checkInitialize(): Boolean {
-        if (hasContext && mAuthenticator != null)
+        if (getInstance().hasContext && mAuthenticator != null)
             return true
 
-        Log.d("Missing call declare com.zing.zalo.zalosdk.oauth.ZaloSDKApplication in Application or call wrap init")
         return false
     }
-
-
 }

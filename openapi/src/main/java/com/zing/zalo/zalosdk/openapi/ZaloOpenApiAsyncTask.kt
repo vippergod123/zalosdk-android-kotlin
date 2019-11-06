@@ -30,7 +30,7 @@ class GetAccessTokenAsyncTask(
     AsyncTask<Void, Void, JSONObject?>() {
     var request = HttpUrlEncodedRequest(Constant.api.AUTH_MOBILE_ACCESS_TOKEN_PATH)
     var httpClient = HttpClient(ServiceMapManager.urlFor(ServiceMapManager.KEY_URL_OAUTH))
-    internal lateinit var authStorage: AuthStorage
+    private lateinit var authStorage: AuthStorage
 
     override fun doInBackground(vararg p0: Void?): JSONObject? {
         val context = weakContext.get()

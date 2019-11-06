@@ -49,30 +49,30 @@ class OpenApiActivity : AppCompatActivity(), ZaloOpenApiCallback {
     private fun bindViewsListener() {
         getProfileButton.setOnClickListener {
             val fields = arrayOf("id", "birthday", "gender", "picture", "name")
-            ZaloOpenApi.getProfile(fields, this)
+            ZaloOpenApi.getInstance().getProfile(fields, this)
         }
         getFriendListUsedAppButton.setOnClickListener {
             val fields = arrayOf("id", "name", "gender", "picture")
-            ZaloOpenApi.getFriendListUsedApp(fields, 0, 999, this)
+            ZaloOpenApi.getInstance().getFriendListUsedApp(fields, 0, 999, this)
         }
         getFriendListInvitableButton.setOnClickListener {
             val fields = arrayOf("id", "name", "gender", "picture")
-            ZaloOpenApi.getFriendListInvitable( 0, 999, this, fields)
+            ZaloOpenApi.getInstance().getFriendListInvitable(fields, 0, 999, this)
 
         }
         inviteFriendUseAppButton.setOnClickListener {
             val friendsList = arrayOf("")
-            ZaloOpenApi.inviteFriendUseApp(friendsList, "Hello!", this)
+            ZaloOpenApi.getInstance().inviteFriendUseApp(friendsList, "Hello!", this)
         }
         postToWallButton.setOnClickListener {
-            ZaloOpenApi.postToWall(
+            ZaloOpenApi.getInstance().postToWall(
                 "http://vnexpress.net",
                 "http://vnexpress.net",
                 this
             )
         }
         sendMsgToFriendButton.setOnClickListener {
-            ZaloOpenApi.sendMsgToFriend("1491696566623706686", "msg", "http://vnexpress.net", this)
+            ZaloOpenApi.getInstance().sendMsgToFriend("1491696566623706686", "msg", "http://vnexpress.net", this)
         }
     }
     //#endregion

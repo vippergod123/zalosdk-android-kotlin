@@ -3,13 +3,17 @@ package com.zing.zalo.zalosdk.openapi
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
+import com.zing.zalo.devicetrackingsdk.DeviceTracking
+import com.zing.zalo.zalosdk.core.helper.AppInfo
+import com.zing.zalo.zalosdk.core.helper.DeviceInfo
+import com.zing.zalo.zalosdk.core.helper.Utils
 import com.zing.zalo.zalosdk.core.http.HttpClient
 import com.zing.zalo.zalosdk.core.http.HttpUrlEncodedRequest
 import com.zing.zalo.zalosdk.core.module.ModuleManager
-import com.zing.zalo.zalosdk.oauth.ZaloSDK
 import com.zing.zalo.zalosdk.oauth.helper.AuthStorage
 import com.zing.zalo.zalosdk.openapi.helper.AppInfoHelper
 import com.zing.zalo.zalosdk.openapi.helper.DataHelper
+import com.zing.zalo.zalosdk.openapi.helper.DeviceHelper
 import io.mockk.*
 import io.mockk.impl.annotations.MockK
 import org.json.JSONObject
@@ -17,13 +21,9 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.io.File
 import java.lang.ref.WeakReference
 
-/**
- * Example local unit test, which will execute on the development machine (host).
- *
- * See [testing documentation](http://d.android.com/tools/testing).
- */
 @RunWith(RobolectricTestRunner::class)
 class ZaloOpenApiTest {
 
@@ -40,10 +40,10 @@ class ZaloOpenApiTest {
     fun setup() {
         MockKAnnotations.init(this, relaxUnitFun = true)
         context = ApplicationProvider.getApplicationContext()
-        authStorage = AuthStorage(context)
-        authStorage.setAuthCode("auth_code_abc")
-        AppInfoHelper.setup()
+
+        mockData(System.currentTimeMillis() -10000)
         ModuleManager.initializeApp(context)
+
     }
 
     @Test
@@ -66,9 +66,11 @@ class ZaloOpenApiTest {
 
     @Test
     fun `get Profile with access token valid`() {
+
         val mock = spyk<ZaloOpenApi>(recordPrivateCalls = true)
         every { mock["isAccessTokenValid"]() } returns true
         every { mock getProperty "enableUnitTest" }  returns true
+
 
         every { httpClient.send(any()).getJSON() } returns JSONObject(DataHelper.profile)
         val fields = arrayOf("id", "birthday", "gender", "picture", "name")
@@ -93,7 +95,6 @@ class ZaloOpenApiTest {
         every { mock["isAccessTokenValid"]() } returns false
         every { mock getProperty "enableUnitTest" }  returns true
 
-
         every {
             httpClient.send(any()).getJSON()
         } returns JSONObject(DataHelper.accessTokenData) andThen JSONObject(DataHelper.profile)
@@ -114,12 +115,11 @@ class ZaloOpenApiTest {
         mock.getAccessTokenAsyncTask = getAccessTokenAsyncTask
         mock.getProfile(fields, callback)
 
-
         verifyRequest(request, 1)
     }
 
     @Test
-    fun `get Profile when auth code invalid `() {
+    fun `get Profile fail when auth code invalid `() {
         val mock = spyk<ZaloOpenApi>(recordPrivateCalls = true)
         every { mock["isAccessTokenValid"]() } returns false
         every { mock getProperty "enableUnitTest" }  returns true
@@ -147,7 +147,6 @@ class ZaloOpenApiTest {
         mock.getAccessTokenAsyncTask = getAccessTokenAsyncTask
         mock.getProfile(fields, callback)
 
-
         verifyRequest(request, 0)
     }
 
@@ -171,5 +170,31 @@ class ZaloOpenApiTest {
         verify(exactly = times) { request.addQueryStringParameter("version", any()) }
         verify(exactly = times) { request.addQueryStringParameter("zdevice", any()) }
         verify(exactly = times) { request.addQueryStringParameter("ztracking", any()) }
+    }
+
+
+
+    private fun mockData(deviceExpiredTime: Long) {
+        mockkObject(DeviceInfo)
+        mockkObject(DeviceTracking)
+        mockkObject(Utils)
+
+        val deviceIdSettingJSON =
+            "{\"deviceId\":\"${DeviceHelper.deviceId}\",\"expiredTime\":\"${deviceExpiredTime}\"}"
+        every {
+            Utils.readFromFile(
+                context,
+                DeviceTracking.DID_FILE_NAME
+            )
+        } returns deviceIdSettingJSON
+
+        every { DeviceInfo.getAdvertiseID(context) } returns DeviceHelper.adsId
+
+        //returns data preloadInfo
+        every { Utils.readFileData(File("/data/etc/appchannel/zalo_appchannel.in")) } returns "${DataHelper.preloadInfo}:${DataHelper.preloadInfo}"
+
+        authStorage = AuthStorage(context)
+        authStorage.setAuthCode("auth_code_abc")
+        AppInfoHelper.setup()
     }
 }
