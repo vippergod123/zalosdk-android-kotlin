@@ -53,6 +53,20 @@
             android:text="Post To Wall"
             android:id="@+id/post_to_wall_button" style="@style/Widget.AppCompat.Button.Colored"
             android:backgroundTint="#05A3E5"/>
+    <Button
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:gravity="center"
+            android:text="Send Message Via App"
+            android:id="@+id/send_message_via_app_button" style="@style/Widget.AppCompat.Button.Colored"
+            android:backgroundTint="#05A3E5"/>
+    <Button
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:gravity="center"
+            android:text="Share Post Via App"
+            android:id="@+id/share_post_via_app" style="@style/Widget.AppCompat.Button.Colored"
+            android:backgroundTint="#05A3E5"/>
 
 
     <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"

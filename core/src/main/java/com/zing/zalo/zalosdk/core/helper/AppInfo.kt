@@ -237,7 +237,6 @@ object AppInfo {
         }
     }
 
-    @Suppress("DEPRECATION")
     private fun extractBasicAppInfo(ctx: Context) {
         synchronized(lock) {
             if (extracted) return

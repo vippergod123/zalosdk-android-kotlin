@@ -9,6 +9,7 @@ import android.net.ConnectivityManager
 import android.os.Build
 import android.os.Environment
 import android.os.Process
+import com.zing.zalo.zalosdk.core.Constant
 import com.zing.zalo.zalosdk.core.http.HttpClient
 import com.zing.zalo.zalosdk.core.http.HttpMultipartRequest
 import com.zing.zalo.zalosdk.core.log.Log
@@ -375,5 +376,26 @@ object Utils {
             TimeUnit.MINUTES -> time * 60 * 1000L
             else -> time.toLong()
         }
+    }
+
+    fun isZaloSupportCallBack(context: Context): Boolean {
+        return getVersionCodeOfPackage(context, Constant.ZALO_PACKAGE_NAME) > 1100123
+    }
+
+    private fun getVersionCodeOfPackage(oContext: Context, packageId: String): Long {
+        try {
+            val pInfo = oContext.packageManager.getPackageInfo(packageId, 0)
+            if (pInfo != null) {
+                return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    pInfo.longVersionCode
+                } else {
+                    pInfo.versionCode.toLong()
+                }
+            }
+        } catch (ex: Exception) {
+            Log.w("getVersionCodeOfPackage",ex)
+        }
+
+        return -1L
     }
 }

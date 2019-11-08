@@ -1,10 +1,11 @@
 package com.zing.zalo.zalosdk.openapi
 
 import android.annotation.SuppressLint
-import android.content.Context
+import android.content.*
 import android.text.TextUtils
 import androidx.annotation.Nullable
 import com.zing.zalo.zalosdk.core.Constant
+import com.zing.zalo.zalosdk.core.helper.Utils
 import com.zing.zalo.zalosdk.core.http.HttpGetRequest
 import com.zing.zalo.zalosdk.core.http.HttpUrlEncodedRequest
 import com.zing.zalo.zalosdk.core.http.IHttpRequest
@@ -12,14 +13,23 @@ import com.zing.zalo.zalosdk.core.log.Log
 import com.zing.zalo.zalosdk.core.module.BaseModule
 import com.zing.zalo.zalosdk.core.module.ModuleManager
 import com.zing.zalo.zalosdk.oauth.helper.AuthStorage
+import com.zing.zalo.zalosdk.openapi.exception.OpenApiException
+import com.zing.zalo.zalosdk.openapi.model.FeedData
 import org.json.JSONObject
 import java.lang.ref.WeakReference
 
 @SuppressLint("StaticFieldLeak")
-class ZaloOpenApi : BaseModule() {
+class ZaloOpenApi : BaseModule(), IZaloOpenApi {
     companion object {
         private val instance = ZaloOpenApi()
         private lateinit var authStorage: AuthStorage
+
+        private const val ZALO_PARAM_BACK_TO_SOURCE = "backToSource"
+        private const val ZALO_PARAM_POST_FEED = "postFeed"
+        private var feedCallbackReceiver: BroadcastReceiver? = null
+        private var callbackZaloPluginClient: WeakReference<ZaloPluginCallback>? = null
+
+        private var isBroadcastRegistered = false
 
         fun getInstance(): ZaloOpenApi {
             return instance
@@ -49,7 +59,7 @@ class ZaloOpenApi : BaseModule() {
      * @param fields   : id, birthday, gender, picture, name ex: {"id", "birthday", "gender", "picture", "name"}
      * @param callback
      */
-    fun getProfile(fields: Array<String>, @Nullable callback: ZaloOpenApiCallback) {
+    override fun getProfile(fields: Array<String>, @Nullable callback: ZaloOpenApiCallback) {
         if (!checkInitialize()) return
 
         val request = HttpGetRequest(Constant.api.GRAPH_V2_ME_PATH)
@@ -65,7 +75,7 @@ class ZaloOpenApi : BaseModule() {
      * @param count    count
      * @param callback
      */
-    fun getFriendListUsedApp(
+    override fun getFriendListUsedApp(
         fields: Array<String>,
         position: Int,
         count: Int,
@@ -89,7 +99,7 @@ class ZaloOpenApi : BaseModule() {
      * @param callback
      * @param fields   : Hỗ trợ các field: id, name, picture, gender
      */
-    fun getFriendListInvitable(
+    override fun getFriendListInvitable(
         fields: Array<String>,
         position: Int,
         count: Int,
@@ -110,7 +120,7 @@ class ZaloOpenApi : BaseModule() {
      * @param message  String
      * @param callback ZaloOpenApiCallback
      */
-    fun inviteFriendUseApp(
+    override fun inviteFriendUseApp(
         friendId: Array<String>,
         message: String,
         @Nullable callback: ZaloOpenApiCallback
@@ -131,7 +141,7 @@ class ZaloOpenApi : BaseModule() {
      * @param msg      String msg
      * @param callback ZaloOpenApiCallback
      */
-    fun postToWall(link: String, msg: String, @Nullable callback: ZaloOpenApiCallback) {
+    override fun postToWall(link: String, msg: String, @Nullable callback: ZaloOpenApiCallback) {
         if (!checkInitialize()) return
 
         val request = HttpUrlEncodedRequest(Constant.api.GRAPH_ME_FEED_PATH)
@@ -149,7 +159,7 @@ class ZaloOpenApi : BaseModule() {
      * @param callback ZaloOpenApiCallback
      */
 
-    fun sendMsgToFriend(
+    override fun sendMsgToFriend(
         friendId: String,
         msg: String,
         link: String,
@@ -164,8 +174,60 @@ class ZaloOpenApi : BaseModule() {
         callApi(request, callback)
     }
 
+    /**
+     * gửi tin nhắn đến bạn bè thông qua app Zalo.
+     * https://developers.zalo.me/docs/sdk/android-sdk/tuong-tac-voi-app-zalo/gui-tin-nhan-toi-ban-be-post-452
+     * @param feedData: object feed cần share
+     * @param callback: SDK sẽ gọi về callback này khi thông tin đã được gửicho app Zalo.
+     */
+    override fun shareMessage(
+        feedData: FeedData,
+        callback: ZaloPluginCallback
+    ) {
+        val ctx = getInstance().context ?: return
+        shareZalo(ctx, feedData, "message", callback)
+    }
+
+    /**
+     * đăng bài viết lên trang nhật ký của user thông qua app Zalo.
+     * https://developers.zalo.me/docs/sdk/android-sdk/tuong-tac-voi-app-zalo/dang-bai-viet-post-447
+     * @param feedData: object feed cần share
+     * @param callback: callback: SDK sẽ gọi về callback này khi thông tin đã được gửicho app Zalo.
+     */
+    override fun shareFeed(
+        feedData: FeedData,
+        callback: ZaloPluginCallback
+    ) {
+        val ctx = getInstance().context ?: return
+        shareZalo(ctx, feedData, "feed", callback)
+    }
+
 
     //#region private supportive method
+    internal fun shareZalo(
+        context: Context,
+        feedData: FeedData,
+        shareTo: String,
+        callback: ZaloPluginCallback?
+    ) {
+        if (!checkInitialize()) return
+
+        val intent = getShareIntentZaloApp(feedData, shareTo)
+        val ableCalled = intent.resolveActivityInfo(context.packageManager, 0) != null
+        if (ableCalled) {
+            registerBroadCast(context)
+
+            callbackZaloPluginClient = if (callback == null) null
+            else WeakReference(callback)
+
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(intent)
+        } else {
+            Log.w("Zalo app is not installed!")
+
+        }
+    }
+
     private val enableUnitTest by lazy { false }
 
     private fun callApi(request: IHttpRequest, @Nullable callback: ZaloOpenApiCallback) {
@@ -200,6 +262,7 @@ class ZaloOpenApi : BaseModule() {
         getAccessTokenAsyncTask.callback = tokenCallback
         getAccessTokenAsyncTask.execute()
     }
+
 
     private fun isAccessTokenValid(): Boolean {
 
@@ -241,5 +304,94 @@ class ZaloOpenApi : BaseModule() {
         callApiAsyncTask.execute(request)
     }
 
-    //#endregion
+
+    private fun getShareIntentZaloApp(
+        feedData: FeedData,
+        shareTo: String
+    ): Intent {
+        val intent = Intent(Intent.ACTION_SEND)
+        intent.type = "text/plain"
+        intent.component = ComponentName(
+            Constant.ZALO_PACKAGE_NAME,
+            "com.zing.zalo.ui.TempShareViaActivity"
+        )
+        intent.putExtra(Intent.EXTRA_SUBJECT, feedData.msg)
+        intent.putExtra(Intent.EXTRA_TEXT, feedData.link)
+        val tokenShareZalo = System.currentTimeMillis().toString()
+        intent.putExtra("token", tokenShareZalo)
+        if (!TextUtils.isEmpty(shareTo)) {
+            if (shareTo == "feed") {
+                intent.putExtra(ZALO_PARAM_POST_FEED, true)
+            } else if (shareTo == "message") {
+                intent.putExtra("hidePostFeed", true)
+            }
+        }
+        intent.putExtra("autoBack2S", true)
+        intent.putExtra(ZALO_PARAM_BACK_TO_SOURCE, true)
+        return intent
+    }
+
+    private fun registerBroadCast(context: Context) {
+        if (Utils.isZaloSupportCallBack(context)) {
+            if (!isBroadcastRegistered) {
+                val intentFilter = IntentFilter()
+                intentFilter.addAction("com.zing.zalo.shareFeedResultInfo")
+                feedCallbackReceiver = object : BroadcastReceiver() {
+                    override fun onReceive(ctx: Context?, intent: Intent?) {
+                        Log.d(
+                            "ZaloOpenApi - broadCastCallBack",
+                            "broadCastCallBack ----- broadcast receiver====="
+                        )
+                        try {
+                            val dataString =
+                                intent?.extras?.getString("result") ?: return
+                            val data = JSONObject(dataString)
+                            if (data.has("token")) {
+                                val token = data.optString("token")
+                                var isSuccess = false
+                                if (!TextUtils.isEmpty(token)) {
+                                    val errorCode = data.getInt("error_code")
+                                    unRegisterReceiver(context)//unregister after received callback
+
+                                    if (errorCode == 0) {
+                                        isSuccess = true
+                                    }
+                                    val callback =
+                                        callbackZaloPluginClient!!.get()
+                                            ?: throw OpenApiException("Can't get callback zalo plugin client!")
+                                    callback.onResult(
+                                        isSuccess,
+                                        data.getInt("error_code"),
+                                        null,
+                                        null
+                                    )
+                                }
+                            }
+                        } catch (ex: OpenApiException) {
+                            Log.w("ZaloOpenApi - registerBroadCast", ex)
+                        } catch (ex: Exception) {
+                            Log.e("ZaloOpenApi - registerBroadCast", ex)
+                            return
+                        }
+                    }
+                }
+                context.registerReceiver(feedCallbackReceiver, intentFilter)
+                isBroadcastRegistered = true
+                Log.d("ZaloOpenApi - registerBroadCast", "register ----- broadcast receiver=====")
+            }
+        } else {
+            val callback = callbackZaloPluginClient?.get() ?: return
+            callback.onResult(true, 0, null, null)
+        }
+    }
+
+    private fun unRegisterReceiver(context: Context) {
+        if (feedCallbackReceiver != null) {
+            context.unregisterReceiver(feedCallbackReceiver)
+            isBroadcastRegistered = false
+            Log.d("ZaloOpenApi - unRegisterReceiver", "unregister ----- broadcast receiver=====")
+        }
+    }
+//#endregion
 }
+
