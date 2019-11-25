@@ -21,7 +21,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
-                <data android:scheme="zalo-1829577289837795818" />
+                <data android:scheme="@string/zalosdk_login_protocol_schema" />
             </intent-filter>
         </activity>
     </application>

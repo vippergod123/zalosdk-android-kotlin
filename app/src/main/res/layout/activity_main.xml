@@ -70,7 +70,7 @@
             android:id="@+id/event_tracking_button"
             style="@style/Widget.AppCompat.Button.Colored"
             android:backgroundTint="#05A3E5" />
-
+            
     <Button
             android:id="@+id/open_api_button"
             style="@style/Widget.AppCompat.Button.Colored"
@@ -79,6 +79,7 @@
             android:backgroundTint="#05A3E5"
             android:gravity="center"
             android:text="Open Api" />
+
 
     <TextView
             android:layout_width="match_parent"

@@ -5,23 +5,21 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import com.zing.zalo.zalosdk.core.helper.AppInfo
+import com.zing.zalo.zalosdk.core.helper.Utils
 import com.zing.zalo.zalosdk.core.log.Log
 import com.zing.zalo.zalosdk.core.module.BaseModule
 import com.zing.zalo.zalosdk.core.module.ModuleManager
 import com.zing.zalo.zalosdk.oauth.callback.GetZaloLoginStatus
 import com.zing.zalo.zalosdk.oauth.callback.ValidateOAuthCodeCallback
 import com.zing.zalo.zalosdk.oauth.helper.AuthStorage
+import java.lang.Exception
 
 @SuppressLint("StaticFieldLeak")
 class ZaloSDK : BaseModule() {
     companion object {
         private val instance = ZaloSDK()
-        private var mAuthenticator: IAuthenticator? = null
-        private var mStorage: AuthStorage? = null
 
-        fun getInstance(): ZaloSDK {
-            return instance
-        }
+        fun getInstance(): ZaloSDK { return instance }
 
         init {
             ModuleManager.addModule(instance)
@@ -29,12 +27,16 @@ class ZaloSDK : BaseModule() {
     }
 
 
+    private var mAuthenticator: IAuthenticator? = null
+    private var mStorage: AuthStorage? = null
 
     override fun onStart(context: Context) {
         super.onStart(context)
 
         mStorage = AuthStorage(context)
         mAuthenticator = Authenticator(context, mStorage!!)
+        verifyConfig(context)
+        Log.d("ZaloSDK", "ZaloSDK isInitialized")
     }
 
     /**
@@ -100,9 +102,10 @@ class ZaloSDK : BaseModule() {
      * Set language for ZaloSDK
      * language: vi, my
      */
-//    private fun setLanguageSDK(language: String) {
-//        Utils.setLanguage(language)
-//    }
+
+    private fun setLanguageSDK(language: String) {
+        Utils.setLanguage(language)
+    }
 
     fun onActivityResult(
         activity: Activity,
@@ -121,5 +124,19 @@ class ZaloSDK : BaseModule() {
             return true
 
         return false
+    }
+
+    private fun verifyConfig(context: Context) {
+        val res = context.resources
+
+        try {
+            if(res.getString(R.string.zalosdk_app_id).equals("missing-app-id")) {
+                Log.e("Missing zalosdk_app_id in strings.xml!!");
+            }
+
+            if(res.getString(R.string.zalosdk_login_protocol_schema).equals("missing-protocol-schema")) {
+                Log.e("Missing zalosdk_login_protocol_schema in strings.xml, please define it as \"zalo-[app_id]\" !!");
+            }
+        } catch (ignored: Exception) {}
     }
 }

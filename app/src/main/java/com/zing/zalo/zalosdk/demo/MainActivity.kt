@@ -39,7 +39,6 @@ class MainActivity : AppCompatActivity(), ValidateOAuthCodeCallback, GetZaloLogi
     private lateinit var appTrackingButton: Button
     private lateinit var eventTrackingButton: Button
     private lateinit var openApiButton: Button
-
     private lateinit var appIDTextView: TextView
     private lateinit var loginStatusTextView: TextView
     private lateinit var authCodeTextView: TextView
@@ -222,7 +221,6 @@ class MainActivity : AppCompatActivity(), ValidateOAuthCodeCallback, GetZaloLogi
         openApiButton.setOnClickListener {
             val intent = Intent(this, OpenApiActivity::class.java)
             startActivity(intent)
-
         }
     }
 
@@ -239,7 +237,6 @@ class MainActivity : AppCompatActivity(), ValidateOAuthCodeCallback, GetZaloLogi
         val timeStamp = System.currentTimeMillis()
         val action = "action-$timeStamp"
         val params = mutableMapOf<String, String>()
-
 
         params["name"] = "datahelper-$timeStamp"
         params["age"] = timeStamp.toString()
