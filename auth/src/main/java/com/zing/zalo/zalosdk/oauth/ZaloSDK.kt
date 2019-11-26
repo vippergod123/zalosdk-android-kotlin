@@ -4,50 +4,39 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import com.zing.zalo.devicetrackingsdk.DeviceTracking
-import com.zing.zalo.devicetrackingsdk.DeviceTrackingListener
-import com.zing.zalo.devicetrackingsdk.IDeviceTracking
-import com.zing.zalo.devicetrackingsdk.SdkTracking
-import com.zing.zalo.zalosdk.oauth.callback.GetZaloLoginStatus
 import com.zing.zalo.zalosdk.core.helper.AppInfo
 import com.zing.zalo.zalosdk.core.helper.Utils
 import com.zing.zalo.zalosdk.core.log.Log
-import com.zing.zalo.zalosdk.core.settings.SettingsManager
+import com.zing.zalo.zalosdk.core.module.BaseModule
+import com.zing.zalo.zalosdk.core.module.ModuleManager
+import com.zing.zalo.zalosdk.oauth.callback.GetZaloLoginStatus
 import com.zing.zalo.zalosdk.oauth.callback.ValidateOAuthCodeCallback
 import com.zing.zalo.zalosdk.oauth.helper.AuthStorage
+import java.lang.Exception
 
 @SuppressLint("StaticFieldLeak")
-object ZaloSDK
-{
+class ZaloSDK : BaseModule() {
+    companion object {
+        private val instance = ZaloSDK()
+
+        fun getInstance(): ZaloSDK { return instance }
+
+        init {
+            ModuleManager.addModule(instance)
+        }
+    }
+
+
     private var mAuthenticator: IAuthenticator? = null
     private var mStorage: AuthStorage? = null
 
-    private var isInitialized = false
-    private var sdkTracking: SdkTracking? = null
-    private var deviceTracking: IDeviceTracking? = null
+    override fun onStart(context: Context) {
+        super.onStart(context)
 
-
-    /**
-     * Initialize the SDK
-     * @param app Application
-     */
-    fun initialize(context: Context) {
-        if (isInitialized)
-            return
-
-        val ctx = context.applicationContext
-        isInitialized = true
-        mStorage = AuthStorage(ctx)
-        mAuthenticator = Authenticator(ctx, mStorage!!)
-        sdkTracking = SdkTracking(ctx)
-
-        DeviceTracking.sdkTracking = sdkTracking
-        DeviceTracking.init(ctx, object :DeviceTrackingListener {
-            override fun onComplete(result: String?) {
-                SettingsManager(ctx).init()
-            }
-        })
-        deviceTracking = DeviceTracking
+        mStorage = AuthStorage(context)
+        mAuthenticator = Authenticator(context, mStorage!!)
+        verifyConfig(context)
+        Log.d("ZaloSDK", "ZaloSDK isInitialized")
     }
 
     /**
@@ -56,12 +45,19 @@ object ZaloSDK
      * @param loginVia not support, SDK will login with Zalo app only.
      * @param listener AuthCompleteListenerI listener to receive authenticate event
      */
-    fun authenticate(activity: Activity, loginVia: LoginVia, listener: IAuthenticateCompleteListener) {
+    fun authenticate(
+        activity: Activity,
+        loginVia: LoginVia,
+        listener: IAuthenticateCompleteListener
+    ) {
         if (checkInitialize())
             mAuthenticator?.authenticate(activity, loginVia, listener)
     }
 
 
+    /**
+     * Logout current Zalo's account
+     */
     fun unAuthenticate() {
         if (checkInitialize())
             mAuthenticator?.unAuthenticate()
@@ -106,11 +102,17 @@ object ZaloSDK
      * Set language for ZaloSDK
      * language: vi, my
      */
+
     private fun setLanguageSDK(language: String) {
         Utils.setLanguage(language)
     }
 
-    fun onActivityResult(activity: Activity, requestCode: Int, resultCode: Int, data: Intent?): Boolean {
+    fun onActivityResult(
+        activity: Activity,
+        requestCode: Int,
+        resultCode: Int,
+        data: Intent?
+    ): Boolean {
         if (checkInitialize())
             return mAuthenticator?.onActivityResult(activity, requestCode, resultCode, data)!!
         return false
@@ -118,12 +120,23 @@ object ZaloSDK
 
 
     private fun checkInitialize(): Boolean {
-        if (isInitialized && mAuthenticator != null)
+        if (getInstance().hasContext && mAuthenticator != null)
             return true
 
-        Log.d("Missing call declare com.zing.zalo.zalosdk.oauth.ZaloSDKApplication in Application or call wrap init")
         return false
     }
 
+    private fun verifyConfig(context: Context) {
+        val res = context.resources
 
+        try {
+            if(res.getString(R.string.zalosdk_app_id).equals("missing-app-id")) {
+                Log.e("Missing zalosdk_app_id in strings.xml!!");
+            }
+
+            if(res.getString(R.string.zalosdk_login_protocol_schema).equals("missing-protocol-schema")) {
+                Log.e("Missing zalosdk_login_protocol_schema in strings.xml, please define it as \"zalo-[app_id]\" !!");
+            }
+        } catch (ignored: Exception) {}
+    }
 }

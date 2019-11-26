@@ -8,8 +8,6 @@ object TestUtils {
         Robolectric.flushBackgroundThreadScheduler()
         Robolectric.flushForegroundThreadScheduler()
     }
-
-
 }
 
 object DataHelper{
@@ -17,7 +15,7 @@ object DataHelper{
     const val PACKAGES_NAME= "{\n" +
             "  \"error\": 0,\n" +
             "  \"data\": {\n" +
-            "    \"scanId\": \"3\",\n" +
+            "    \"scanId\": \"${AppInfoHelper.scanId}\",\n" +
             "    \"expiredTime\": 43200000,\n" +
             "    \"apps\": [\n" +
             "      \"com.zing.mp3\",\n" +
@@ -74,6 +72,7 @@ object DataHelper{
 
     val INSTALLED_APP_LIST = arrayListOf("com.zing.mp3", "com.zing.zalo", "com.facebook.orca", "com.facebook.katana")
 
+    const val authCode = "authCode"
     const val responseGetDeviceIdAsyncTask = "{\"data\":{\"deviceId\":\"${AppTrackerHelper.deviceId}\",\"expiredTime\":43200000},\"error\":0,\"errorMsg\":\"\"}"
     const val responseGetSdkIdAsyncTask = "{\"data\":{\"privateKey\":\"${AppTrackerHelper.privateKey}\",\"sdkId\":\"${AppTrackerHelper.sdkId}\"},\"error\":0,\"errorMsg\":\"\"}"
 }
