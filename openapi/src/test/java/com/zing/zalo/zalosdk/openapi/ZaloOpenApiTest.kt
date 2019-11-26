@@ -50,7 +50,8 @@ class ZaloOpenApiTest {
 
         packageMgr = shadowOf(context.packageManager)
         mockData(System.currentTimeMillis() - 10000)
-        ZaloOpenApi.getInstance().start(context)
+        ModuleManager.initializeApp(context)
+
     }
 
     @Test
@@ -191,7 +192,6 @@ class ZaloOpenApiTest {
     fun `share post via App`() {
         //1. mock
         mockZaloInstalled()
-        ZaloOpenApi.isBroadcastRegistered = false
         val mock = spyk<ZaloOpenApi>(recordPrivateCalls = true)
         val broadcastReceiver = slot<BroadcastReceiver>()
         val receiverFilter = slot<IntentFilter>()

@@ -212,11 +212,11 @@ class MainActivity : AppCompatActivity(), ValidateOAuthCodeCallback, GetZaloLogi
 
         eventTrackingButton.setOnClickListener {
 
-//            val eventTracker = EventTracker(this)
-//
-//            eventTracker.addEvent(mockEvent())
-//            eventTracker.setListener(eventTrackerListener)
-//            eventTracker.dispatchEventImmediate(mockEvent())
+            val eventTracker = EventTracker(this)
+
+            eventTracker.addEvent(mockEvent())
+            eventTracker.setListener(eventTrackerListener)
+            eventTracker.dispatchEventImmediate(mockEvent())
         }
 
         openApiButton.setOnClickListener {

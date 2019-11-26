@@ -8,6 +8,8 @@ object TestUtils {
         Robolectric.flushBackgroundThreadScheduler()
         Robolectric.flushForegroundThreadScheduler()
     }
+
+
 }
 
 object DataHelper{
@@ -15,7 +17,7 @@ object DataHelper{
     const val PACKAGES_NAME= "{\n" +
             "  \"error\": 0,\n" +
             "  \"data\": {\n" +
-            "    \"scanId\": \"${AppInfoHelper.scanId}\",\n" +
+            "    \"scanId\": \"3\",\n" +
             "    \"expiredTime\": 43200000,\n" +
             "    \"apps\": [\n" +
             "      \"com.zing.mp3\",\n" +

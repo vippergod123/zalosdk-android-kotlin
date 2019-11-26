@@ -1,7 +1,6 @@
 package com.zing.zalo.zalosdk.core.apptracking
 
 import android.content.Context
-import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
 import com.zing.zalo.devicetrackingsdk.DeviceTracking
@@ -18,7 +17,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.Shadows.shadowOf
 
 @RunWith(RobolectricTestRunner::class)
 class AppTrackerTest {
@@ -81,10 +79,10 @@ class AppTrackerTest {
 
         sut.listener = appTrackerListener
         TestUtils.waitTaskRunInBackgroundAndForeground()
-
-        shadowOf(Looper.getMainLooper()).idle()
+        val jsonData = prepareDataForSubmitInstalledApp(sut, authCode)
         verify(exactly = 1) { sut.needToScanInstalledApp()}
-//        verify(exactly = 1) { appTrackerStorage.setInstallExpireTime(any()) }
+//        verify(exactly = 1) { Utils.encrypt(AppTrackerHelper.privateKey, jsonData.toString()) }
+        verify(exactly = 1) { appTrackerStorage.setInstallExpireTime(any()) }
         verify(exactly = 1) { appTrackerStorage.getInstallExpireTime() }
     }
 

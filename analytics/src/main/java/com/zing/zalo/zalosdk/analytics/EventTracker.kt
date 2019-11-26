@@ -1,6 +1,5 @@
 package com.zing.zalo.zalosdk.analytics
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Handler
 import android.os.HandlerThread
@@ -15,39 +14,34 @@ import com.zing.zalo.zalosdk.core.helper.Utils
 import com.zing.zalo.zalosdk.core.http.HttpClient
 import com.zing.zalo.zalosdk.core.http.HttpUrlEncodedRequest
 import com.zing.zalo.zalosdk.core.log.Log
-import com.zing.zalo.zalosdk.core.module.BaseModule
-import com.zing.zalo.zalosdk.core.module.ModuleManager
 import com.zing.zalo.zalosdk.core.servicemap.ServiceMapManager
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.*
 
-@SuppressLint("StaticFieldLeak")
-class EventTracker : BaseModule(), IEventTracker {
+class EventTracker(var context: Context) : IEventTracker {
     companion object {
         const val ACT_DISPATCH_EVENTS = 0x5000
         const val ACT_DISPATCH_EVENT_IMMEDIATE = 0x5001
         const val ACT_PUSH_EVENTS = 0x5002
+
         const val DELAY_SECOND = 120
 
-        private val instance = EventTracker()
-
-        fun getInstance(): EventTracker {
-            return instance
-        }
+        private var isDispatchHandlerRunning = false
+        var thread = HandlerThread("zdt-event-tracker", HandlerThread.MIN_PRIORITY)
 
         init {
-            ModuleManager.addModule(instance)
+            Log.d("EventTracker", "start thread zdt-event-tracker")
+            thread.start()
         }
     }
 
-    private lateinit var dispatchHandler: Handler
-    private lateinit var eventStorage: EventStorage
-    private lateinit var handler: Handler
+    var eventStorage = EventStorage(context)
+
+    var handler: Handler
     private var listener: EventTrackerListener? = null
-    private var isDispatchHandlerRunning = false
 
-
+    lateinit var dispatchHandler: Handler
     private var dispatchRunnable = object : Runnable {
         override fun run() {
             dispatchEvent()
@@ -55,7 +49,6 @@ class EventTracker : BaseModule(), IEventTracker {
         }
     }
 
-    internal lateinit var thread:HandlerThread
     internal var httpClient = HttpClient(
         ServiceMapManager.urlFor(
             ServiceMapManager.KEY_URL_CENTRALIZED
@@ -63,23 +56,13 @@ class EventTracker : BaseModule(), IEventTracker {
     )
     internal var request = HttpUrlEncodedRequest(Constant.core.api.API_TRACKING_URL)
 
-
-    override fun onStart(context: Context) {
-        super.onStart(context)
-
+    init {
         Log.d("EventTracker", "start thread zdt-event-tracker")
-        thread = HandlerThread("zdt-event-tracker", HandlerThread.MIN_PRIORITY)
-        thread.start()
-
-        dispatchHandler = Handler(thread.looper)
-
         handler = Handler(thread.looper, Handler.Callback {
             this.handleMessage(it)
         })
 
-        eventStorage = EventStorage(context)
-
-        runDispatchEventLoop()
+        dispatchHandler = Handler(thread.looper)
     }
 
     //#region handle send message for method
@@ -93,7 +76,7 @@ class EventTracker : BaseModule(), IEventTracker {
         handler.sendMessage(msg)
     }
 
-    override fun addEvent(event: Event) {
+    override fun addEvent(event:Event) {
         /** @see handleMessage */
         Log.d("handleMessage", "ACT_PUSH_EVENTS_FUNCTION")
         val msg = Message()
@@ -126,7 +109,12 @@ class EventTracker : BaseModule(), IEventTracker {
         this.listener = listener
     }
 
-    fun runDispatchEventLoop() {
+    /**
+     * dispatch event loop every DELAY_SECOND
+     * @see com.zing.zalo.provider.ZaloBaseSDK.runDispatchEvent
+     * method is called by reflection Kotlin (@see class above)
+     */
+    private fun runDispatchEventLoop() {
         if (!isDispatchHandlerRunning) {
             isDispatchHandlerRunning = true
             dispatchHandler.post(dispatchRunnable)
@@ -166,9 +154,9 @@ class EventTracker : BaseModule(), IEventTracker {
     }
 
     private fun doDispatchEvent(events: List<Event>) {
+        val storage = Storage(context)
+
         try {
-            val ctx = context ?: throw Exception("Context init failed")
-            val storage = Storage(ctx)
             if (events.isEmpty())
                 return
 
@@ -176,15 +164,15 @@ class EventTracker : BaseModule(), IEventTracker {
             val eventData = prepareEventData(events)
             val zdId = DeviceTracking.getInstance().getDeviceId() ?: ""
 
-            val an = AppInfo.getAppName(ctx)
-            val av = AppInfo.getVersionName(ctx)
-            val appId = AppInfo.getAppId(ctx)
+            val an = AppInfo.getAppName(context)
+            val av = AppInfo.getVersionName(context)
+            val appId = AppInfo.getAppId(context)
             val oauthCode = storage.getOAuthCode() ?: ""
             val ts = Date().time.toString()
             val strEventData = eventData.toString()
             val strAppData = appData.toString()
             val strSocialAcc = "[]"
-            val packageName = ctx.packageName
+            val packageName = context.packageName
             val params = arrayOf(
                 "pl",
                 "appId",
@@ -234,7 +222,7 @@ class EventTracker : BaseModule(), IEventTracker {
             request.addParameter("gzip", "0")
             request.addParameter("et", "0")
             request.addParameter("socialAcc", strSocialAcc)
-            request.addParameter("packageName", ctx.packageName)
+            request.addParameter("packageName", context.packageName)
 
             val resp = httpClient.send(request)
             val jsonObject = resp.getJSON() ?: return
@@ -257,7 +245,7 @@ class EventTracker : BaseModule(), IEventTracker {
         val data = JSONObject()
         val deviceId = DeviceTracking.getInstance().getDeviceId() ?: ""
         val ts = System.currentTimeMillis()
-        val deviceInfoData = DeviceInfo.prepareTrackingData(context as Context, deviceId, ts)
+        val deviceInfoData = DeviceInfo.prepareTrackingData(context, deviceId, ts)
 
         val jsonEvents = JSONArray()
         var jsonEvent: JSONObject
