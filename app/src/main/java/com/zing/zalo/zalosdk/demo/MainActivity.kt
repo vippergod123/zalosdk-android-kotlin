@@ -151,6 +151,7 @@ class MainActivity : AppCompatActivity(), ValidateOAuthCodeCallback, GetZaloLogi
         openApiButton = findViewById(R.id.open_api_button)
         eventTrackingButton = findViewById(R.id.event_tracking_button)
         appTrackingButton = findViewById(R.id.app_tracking_button)
+        eventTrackingButton = findViewById(R.id.event_tracking_button)
 
 
         appIDTextView = findViewById(R.id.app_id_text_view)
@@ -211,11 +212,11 @@ class MainActivity : AppCompatActivity(), ValidateOAuthCodeCallback, GetZaloLogi
 
         eventTrackingButton.setOnClickListener {
 
-            val eventTracker = EventTracker(this)
-
-            eventTracker.addEvent(mockEvent())
-            eventTracker.setListener(eventTrackerListener)
-            eventTracker.dispatchEventImmediate(mockEvent())
+//            val eventTracker = EventTracker(this)
+//
+//            eventTracker.addEvent(mockEvent())
+//            eventTracker.setListener(eventTrackerListener)
+//            eventTracker.dispatchEventImmediate(mockEvent())
         }
 
         openApiButton.setOnClickListener {
