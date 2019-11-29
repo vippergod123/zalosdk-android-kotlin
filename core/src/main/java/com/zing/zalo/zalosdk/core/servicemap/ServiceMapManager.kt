@@ -7,18 +7,18 @@ import android.text.TextUtils
 import com.zing.zalo.zalosdk.core.Constant
 import com.zing.zalo.zalosdk.core.http.HttpClient
 import com.zing.zalo.zalosdk.core.http.HttpGetRequest
-import com.zing.zalo.zalosdk.core.http.HttpMethod
 import com.zing.zalo.zalosdk.core.log.Log
 import com.zing.zalo.zalosdk.core.module.BaseModule
 import org.json.JSONException
 import org.json.JSONObject
-import java.util.*
 
 @SuppressLint("StaticFieldLeak")
 class ServiceMapManager : BaseModule() {
     companion object {
         private val instance = ServiceMapManager()
-        fun getInstance() : ServiceMapManager { return instance }
+        fun getInstance(): ServiceMapManager {
+            return instance
+        }
 
         const val KEY_URL_OAUTH = "oauth_http_s"
         const val KEY_URL_GRAPH = "graph_http_s"
@@ -75,23 +75,24 @@ class ServiceMapManager : BaseModule() {
         if (isExpiredTime() && !Constant.DEV_MODE) {
             val serviceTask =
                 DownloadServiceMapFilesAsyncTask(httpClient, object : ServiceMapListener {
-                override fun receiveJSONObject(dataObject: JSONObject?) {
-                    if (dataObject == null) {
-                        Log.v("Service map not found!")
-                        return
-                    } else {
-                        try {
-                            val urlOauth = dataObject.getJSONArray(KEY_URL_OAUTH).getString(0)
-                            val urlGraph = dataObject.getJSONArray(KEY_URL_GRAPH).getString(0)
-                            val urlCentralized = dataObject.getJSONArray(KEY_URL_CENTRALIZED).getString(0)
+                    override fun receiveJSONObject(dataObject: JSONObject?) {
+                        if (dataObject == null) {
+                            Log.v("Service map not found!")
+                            return
+                        } else {
+                            try {
+                                val urlOauth = dataObject.getJSONArray(KEY_URL_OAUTH).getString(0)
+                                val urlGraph = dataObject.getJSONArray(KEY_URL_GRAPH).getString(0)
+                                val urlCentralized =
+                                    dataObject.getJSONArray(KEY_URL_CENTRALIZED).getString(0)
 
-                            updateMapUrls(urlOauth, urlGraph, urlCentralized)
-                        } catch (e: JSONException) {
-                            Log.e("ServiceMapManager: load()", e)
+                                updateMapUrls(urlOauth, urlGraph, urlCentralized)
+                            } catch (e: JSONException) {
+                                Log.e("ServiceMapManager: load()", e)
+                            }
                         }
                     }
-                }
-            })
+                })
             serviceTask.execute()
 
         }
@@ -138,7 +139,10 @@ class ServiceMapManager : BaseModule() {
         val urlGraph = storage?.getKeyUrlGraph() ?: ""
         val urlCentralized = storage?.getKeyUrlCentralized() ?: ""
 
-        if (!TextUtils.isEmpty(urlOauth) && !TextUtils.isEmpty(urlGraph) && !TextUtils.isEmpty(urlCentralized)) {
+        if (!TextUtils.isEmpty(urlOauth) && !TextUtils.isEmpty(urlGraph) && !TextUtils.isEmpty(
+                urlCentralized
+            )
+        ) {
             urls[KEY_URL_OAUTH] = urlOauth
             urls[KEY_URL_GRAPH] = urlGraph
             urls[KEY_URL_CENTRALIZED] = urlCentralized
@@ -181,7 +185,7 @@ class ServiceMapManager : BaseModule() {
                     val decryptString = ServiceMapTools.decryptString(str)
                     return JSONObject(decryptString)
                 } catch (e: Exception) {
-                    Log.w("DownloadServiceMapFilesAsyncTask" , e)
+                    Log.w("DownloadServiceMapFilesAsyncTask", e)
                 }
             }
             return null

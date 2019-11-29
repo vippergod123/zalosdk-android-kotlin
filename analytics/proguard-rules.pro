@@ -1,21 +1,60 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
+#-repackageclasses com.zing.zalo.zalosdk.analytics.internal
+#-keepattributes MethodParameters,LineNumberTable,LocalVariableTable,LocalVariableTypeTable
+#-keep class com.zing.zalo.devicetrackingsdk.ZingAnalyticsManager
 #
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
-
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
+#-keepclassmembers public class com.zing.zalo.devicetrackingsdk.ZingAnalyticsManager {
+#    public static <methods>;
+#    public <methods>;
+#    public static <fields>;
+#    public <fields>;
 #}
+#
+#-keep public interface com.zing.zalo.devicetrackingsdk.ZingAnalyticsManager$CheckPreloadListener {*;}
+#-keep public interface com.zing.zalo.devicetrackingsdk.abstracts.* {*;}
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+#
+#-keep public class * extends android.app.Activity
+#-keep public class * extends android.app.Application
+#-keep public class * extends android.app.Service
+#-keep public class * extends android.content.BroadcastReceiver
+#-keep public class * extends android.content.ContentProvider
+#-keep public class * extends android.app.backup.BackupAgentHelper
+#-keep public class * extends android.preference.Preference
+#
+#-keepclasseswithmembernames class * {
+#    native <methods>;
+#    public static <methods>;
+#}
+#
+#-keepclasseswithmembers class * {
+#    public <init>(android.content.Context, android.util.AttributeSet);
+#}
+#
+#-keepclasseswithmembers class * {
+#    public <init>(android.content.Context, android.util.AttributeSet, int);
+#}
+#
+#-keepclassmembers class * extends android.app.Activity {
+#    public void *(android.view.View);
+#}
+#
+#-keepclassmembers enum * {
+#    public static **[] values();
+#    public static ** valueOf(java.lang.String);
+#}
+#
+#-keep class * implements android.os.Parcelable {
+#    public static final android.os.Parcelable$Creator *;
+#}
+#
+
+
+#-keep public com.zing.zalo.zalosdk.analytics.model.Event {*;}
+#-keep class com.zing.zalo.zalosdk.analytics.EventTracker
+#
+#-keep public class * extends android.content.Context
+#-keep public class * extends android.content.ContentValues
+
+# Output a source map file
+-printmapping proguard.map

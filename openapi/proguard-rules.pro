@@ -19,3 +19,20 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+-keep class com.zing.zalo.zalosdk.openapi.ZaloOpenApi { com.zing.zalo.zalosdk.openapi.GetAccessTokenAsyncTask getAccessTokenAsyncTask; }
+-keep class com.zing.zalo.zalosdk.openapi.model.** { *; }
+-keep public class * extends android.content.BroadcastReceiver
+-keep public class * extends android.content.ComponentName
+-keep public class * extends android.app.backup.Context
+-keep public class * extends android.content.Intent
+-keep public class * extends android.app.backup.IntentFilter
+
+-keepclassmembers class com.zing.zalo.zalosdk.openapi.ZaloOpenApi {
+    public *;
+}
+-keepclassmembers class com.zing.zalo.zalosdk.openapi.exception.OpenApiException { *; }
+
+-keepclasseswithmembers public interface androidx.annotation.Nullable { *;}
+# Output a source map file
+-printmapping proguard.map

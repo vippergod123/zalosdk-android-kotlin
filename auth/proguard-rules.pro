@@ -19,3 +19,12 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+-keep class com.zing.zalo.zalosdk.oauth.ZaloSDK { com.zing.zalo.zalosdk.oauth.ZaloSDK$Companion Companion; }
+-keep class com.zing.zalo.zalosdk.oauth.ZaloSDK$Companion { *; }
+
+-keep class com.zing.zalo.zalosdk.oauth.helper.AuthStorage { *; }
+-keepnames class com.zing.zalo.zalosdk.oauth.ZaloSDK {
+    public *;
+ }
+

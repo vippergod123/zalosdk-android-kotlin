@@ -85,26 +85,8 @@ class ZaloSDK : BaseModule() {
         return false
     }
 
-    /**
-     * Get the current app id
-     * @return App id
-     */
-    fun getAppID(context: Context): Long {
-        return AppInfo.getAppIdLong(context)
-    }
-
-
     fun getVersion(): String {
         return Constant.core.VERSION
-    }
-
-    /**
-     * Set language for ZaloSDK
-     * language: vi, my
-     */
-
-    private fun setLanguageSDK(language: String) {
-        Utils.setLanguage(language)
     }
 
     fun onActivityResult(
@@ -118,6 +100,9 @@ class ZaloSDK : BaseModule() {
         return false
     }
 
+    internal fun getAppID(context: Context): Long {
+        return AppInfo.getAppIdLong(context)
+    }
 
     private fun checkInitialize(): Boolean {
         if (getInstance().hasContext && mAuthenticator != null)
@@ -128,7 +113,6 @@ class ZaloSDK : BaseModule() {
 
     private fun verifyConfig(context: Context) {
         val res = context.resources
-
         try {
             if(res.getString(R.string.zalosdk_app_id).equals("missing-app-id")) {
                 Log.e("Missing zalosdk_app_id in strings.xml!!");

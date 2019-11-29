@@ -72,6 +72,7 @@ class AppTrackerTest {
                 packageNames: List<String>,
                 installedApps: List<String>
             ) {
+                Log.d(scanId)
                 assertThat(installedApps).isEqualTo(DataHelper.INSTALLED_APP_LIST)
                 assertThat(scanId).isEqualTo(AppInfoHelper.scanId)
                 assertThat(packageNames).isEqualTo(getPackagesNameArrayFromJSON())
