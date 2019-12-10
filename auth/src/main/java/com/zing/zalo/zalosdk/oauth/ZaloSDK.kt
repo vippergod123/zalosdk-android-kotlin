@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import androidx.annotation.Keep
 import com.zing.zalo.zalosdk.core.helper.AppInfo
 import com.zing.zalo.zalosdk.core.helper.Utils
 import com.zing.zalo.zalosdk.core.log.Log
@@ -16,6 +17,7 @@ import java.lang.Exception
 
 @SuppressLint("StaticFieldLeak")
 class ZaloSDK : BaseModule() {
+    @Keep
     companion object {
         private val instance = ZaloSDK()
 
@@ -98,10 +100,6 @@ class ZaloSDK : BaseModule() {
         if (checkInitialize())
             return mAuthenticator?.onActivityResult(activity, requestCode, resultCode, data)!!
         return false
-    }
-
-    internal fun getAppID(context: Context): Long {
-        return AppInfo.getAppIdLong(context)
     }
 
     private fun checkInitialize(): Boolean {

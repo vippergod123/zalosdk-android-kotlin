@@ -18,8 +18,8 @@ android {
 
     buildTypes {
         debug {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            minifyEnabled enableProguard
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         release {
             minifyEnabled true
@@ -30,13 +30,15 @@ android {
 }
 
 dependencies {
+    implementation 'androidx.appcompat:appcompat:1.1.0'
     //Zalo SDK Dependence
-    implementation project(':core')
-
+//    debugImplementation project(':core')
+    debugImplementation fileTree(include: ['core-debug.aar'], dir: '../core/build/outputs/aar')
+    releaseImplementation fileTree(include: ['core-release.aar'], dir: '../core/build/outputs/aar')
     //Unit Test
 
     testImplementation 'junit:junit:4.12'
-    testImplementation 'androidx.test:core:1.1.0'
+    testImplementation 'androidx.test:core:1.2.0'
     testImplementation 'org.robolectric:robolectric:4.1'
     testImplementation "com.google.truth:truth:0.43"
     testImplementation 'org.mockito:mockito-core:2.4.0'
@@ -50,4 +52,5 @@ dependencies {
 
     androidTestImplementation 'androidx.test:runner:1.2.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+
 }

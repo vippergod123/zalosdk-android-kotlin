@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.os.AsyncTask
 import android.text.TextUtils
+import androidx.annotation.Keep
 import com.zing.zalo.zalosdk.core.Constant
 import com.zing.zalo.zalosdk.core.http.HttpClient
 import com.zing.zalo.zalosdk.core.http.HttpGetRequest
@@ -14,6 +15,7 @@ import org.json.JSONObject
 
 @SuppressLint("StaticFieldLeak")
 class ServiceMapManager : BaseModule() {
+    @Keep
     companion object {
         private val instance = ServiceMapManager()
         fun getInstance(): ServiceMapManager {
@@ -103,11 +105,11 @@ class ServiceMapManager : BaseModule() {
         storage = null
     }
 
-    fun urlFor(key: String): String {
+    private fun urlFor(key: String): String {
         return urls[key] ?: key
     }
 
-    fun urlFor(key: String, path: String): String {
+    private fun urlFor(key: String, path: String): String {
         val url = urls[key]
         if (TextUtils.isEmpty(url)) {
             return path

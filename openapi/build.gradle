@@ -1,6 +1,9 @@
 apply plugin: 'com.android.library'
+
 apply plugin: 'kotlin-android'
+
 apply plugin: 'kotlin-android-extensions'
+
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion as Integer
     buildToolsVersion rootProject.ext.buildToolsVersion as String
@@ -17,7 +20,8 @@ android {
 
     buildTypes {
         debug {
-            minifyEnabled false
+            minifyEnabled enableProguard
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         release {
             minifyEnabled true
@@ -28,15 +32,18 @@ android {
 
 dependencies {
 
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation project(':core')
-    implementation project(':auth')
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+
+    //Zalo's module
+    debugImplementation fileTree(include: ['core-debug.aar'], dir: '../core/build/outputs/aar')
+    releaseImplementation fileTree(include: ['core-release.aar'], dir: '../core/build/outputs/aar')
+
+//    implementation project(':auth')
+    debugImplementation fileTree(include: ['auth-debug.aar'], dir: '../auth/build/outputs/aar')
+    releaseImplementation fileTree(include: ['auth-release.aar'], dir: '../auth/build/outputs/aar')
+
+//    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
     ///////////
-    androidTestImplementation 'androidx.test:runner:1.2.0'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
-
     testImplementation 'io.mockk:mockk:1.9.3'
     testImplementation 'junit:junit:4.12'
     testImplementation 'androidx.test:core:1.1.0'
@@ -44,7 +51,7 @@ dependencies {
     testImplementation 'org.robolectric:robolectric:4.1'
     testImplementation 'org.mockito:mockito-core:2.4.0'
 
-    def powerMockVersion =  '1.7.0RC2'
+    def powerMockVersion = '1.7.0RC2'
     testImplementation "org.powermock:powermock-core:$powerMockVersion"
     testImplementation "org.powermock:powermock-module-junit4:$powerMockVersion"
     testImplementation "org.powermock:powermock-api-mockito2:$powerMockVersion"

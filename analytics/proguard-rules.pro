@@ -1,17 +1,15 @@
-#-repackageclasses com.zing.zalo.zalosdk.analytics.internal
-#-keepattributes MethodParameters,LineNumberTable,LocalVariableTable,LocalVariableTypeTable
-#-keep class com.zing.zalo.devicetrackingsdk.ZingAnalyticsManager
-#
-#-keepclassmembers public class com.zing.zalo.devicetrackingsdk.ZingAnalyticsManager {
-#    public static <methods>;
-#    public <methods>;
-#    public static <fields>;
-#    public <fields>;
-#}
+-verbose
+-repackageclasses com.zing.zalo.zalosdk.core.analytics
+
+-keepclasseswithmembers class com.zing.zalo.zalosdk.analytics.EventTracker { *; }
+-keepclasseswithmembers class com.zing.zalo.zalosdk.analytics.EventTrackerListener { *; }
+-keepclasseswithmembers class com.zing.zalo.zalosdk.analytics.IEventTracker { *; }
+-keepclasseswithmembers class com.zing.zalo.zalosdk.analytics.model.Event {*;}
+-keepclasseswithmembers class com.zing.zalo.zalosdk.analytics.EventTracker$Companion { com.zing.zalo.zalosdk.analytics.EventTracker getInstance(); }
+#-keepclasseswithmembers interface com.zing.zalo.zalosdk.analytics.IEventTracker {*;}
 #
 #-keep public interface com.zing.zalo.devicetrackingsdk.ZingAnalyticsManager$CheckPreloadListener {*;}
 #-keep public interface com.zing.zalo.devicetrackingsdk.abstracts.* {*;}
-
 
 #
 #-keep public class * extends android.app.Activity
