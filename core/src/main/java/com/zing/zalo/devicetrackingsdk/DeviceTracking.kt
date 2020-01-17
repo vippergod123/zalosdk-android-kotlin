@@ -42,7 +42,7 @@ class DeviceTracking private constructor() : BaseModule(), IDeviceTracking {
     private val loading = AtomicBoolean(false)
 
     var httpClient = HttpClient(
-        ServiceMapManager.urlFor(
+        ServiceMapManager.getInstance().urlFor(
             ServiceMapManager.KEY_URL_CENTRALIZED
         )
     )
@@ -212,13 +212,11 @@ class DeviceTracking private constructor() : BaseModule(), IDeviceTracking {
                     return@launch
                 }
             } catch (ex: JSONException) {
-                Log.e("GetDeviceIdAsyncTask", ex)
+                Log.e("callDeviceIdRequest", ex)
             } catch (ex: Exception) {
-                Log.e("GetDeviceIdAsyncTask", ex)
+                Log.e("callDeviceIdRequest", ex)
             }
-            Log.e("callDeviceIdRequest", "callDeviceIdRequest")
             callback(null, 0)
-            return@launch
         }
     }
     //#endregion

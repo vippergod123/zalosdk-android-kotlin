@@ -25,7 +25,7 @@ class SdkTracking private constructor() : BaseModule(), ISdkTracking {
     private var privateKey: String? = null
 
     var httpClient = HttpClient(
-        ServiceMapManager.urlFor(
+        ServiceMapManager.getInstance().urlFor(
             ServiceMapManager.KEY_URL_CENTRALIZED
         )
     )
